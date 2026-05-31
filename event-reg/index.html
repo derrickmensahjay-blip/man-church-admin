@@ -210,9 +210,18 @@ async function lookupPhone(){
           document.getElementById('action-btn').textContent='&#127881; Register &amp; Check In';
           showStep('step-found');
         }else{
+          // Check previous event registrations to auto-fill
+          var prevReg2=await db.from('event_registrations').select('fname,lname,email,gender').eq('phone',phone).neq('event_id',currentEvent.id).order('created_at',{ascending:false}).limit(1).single();
           document.getElementById('r-phone').value=phone;
-          ['r-fname','r-lname','r-email'].forEach(function(id){document.getElementById(id).value='';});
-          document.getElementById('r-gender').value='';
+          if(prevReg2.data){
+            document.getElementById('r-fname').value=prevReg2.data.fname||'';
+            document.getElementById('r-lname').value=prevReg2.data.lname||'';
+            document.getElementById('r-email').value=prevReg2.data.email||'';
+            document.getElementById('r-gender').value=prevReg2.data.gender||'';
+          }else{
+            ['r-fname','r-lname','r-email'].forEach(function(id){document.getElementById(id).value='';});
+            document.getElementById('r-gender').value='';
+          }
           document.getElementById('reg-title').textContent='Register &amp; Check In';
           showStep('step-register');
         }
@@ -232,10 +241,20 @@ async function lookupPhone(){
         document.getElementById('action-btn').textContent='&#9989; Register for this Event';
         showStep('step-found');
       }else{
+        // Check previous event registrations to auto-fill
+        var prevReg=await db.from('event_registrations').select('fname,lname,email,gender').eq('phone',phone).neq('event_id',currentEvent.id).order('created_at',{ascending:false}).limit(1).single();
         document.getElementById('r-phone').value=phone;
-        ['r-fname','r-lname','r-email'].forEach(function(id){document.getElementById(id).value='';});
-        document.getElementById('r-gender').value='';
-        document.getElementById('reg-title').textContent='First time here? Welcome!';
+        if(prevReg.data){
+          // Auto-fill from previous event registration
+          document.getElementById('r-fname').value=prevReg.data.fname||'';
+          document.getElementById('r-lname').value=prevReg.data.lname||'';
+          document.getElementById('r-email').value=prevReg.data.email||'';
+          document.getElementById('r-gender').value=prevReg.data.gender||'';
+        }else{
+          ['r-fname','r-lname','r-email'].forEach(function(id){document.getElementById(id).value='';});
+          document.getElementById('r-gender').value='';
+        }
+        document.getElementById('reg-title').textContent=prevReg.data?'Welcome back! Confirm your details':'First time here? Welcome!';
         showStep('step-register');
       }
     }
@@ -273,7 +292,11 @@ async function registerAndAction(){
   document.getElementById('register-btn').innerHTML='<span class="spinner"></span> Processing...';
   try{
     var checkin=isCheckinMode;
-    await db.from('event_registrations').insert({event_id:currentEvent.id,fname:fname,lname:lname,phone:currentPhone,email:document.getElementById('r-email').value.trim(),gender:document.getElementById('r-gender').value,is_member:false,checked_in:checkin,checked_in_at:checkin?new Date().toISOString():null});
+    var email=document.getElementById('r-email').value.trim();
+    var gender=document.getElementById('r-gender').value;
+
+    // Register for event only — do not save to members table
+    await db.from('event_registrations').insert({event_id:currentEvent.id,member_id:null,fname:fname,lname:lname,phone:currentPhone,email:email,gender:gender,is_member:false,checked_in:checkin,checked_in_at:checkin?new Date().toISOString():null});
     if(checkin){showSuccess('&#9989;',fname+'!','You are registered and checked in!','Checked in for '+currentEvent.name+' on '+fd(today));}
     else{showSuccess('&#127881;',fname+'!','You are registered for this event.','&#128197; '+fd(currentEvent.event_date)+(currentEvent.venue?' &nbsp;&middot;&nbsp; &#128205; '+currentEvent.venue:''));}
   }catch(e){errEl.innerHTML='<div class="alert alert-error">Error. Please try again.</div>';}
