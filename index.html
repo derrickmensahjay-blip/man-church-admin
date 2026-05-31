@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mighty Army Network — Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f4f8;color:#1e293b;font-size:15px}
+#login-screen{position:fixed;top:0;left:0;width:100%;height:100%;background:#f0f4f8;display:flex;align-items:center;justify-content:center;z-index:9999}
+.login-card{background:white;border-radius:16px;padding:2.5rem;width:100%;max-width:400px;box-shadow:0 4px 24px rgba(0,0,0,0.1);text-align:center}
+.login-icon{font-size:48px;margin-bottom:1rem}
+.login-title{font-size:22px;font-weight:700;color:#1a3a5c;margin-bottom:6px}
+.login-sub{font-size:13px;color:#64748b;margin-bottom:2rem}
+.login-input{width:100%;padding:12px 16px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:16px;text-align:center;letter-spacing:2px;margin-bottom:12px;transition:border 0.15s;outline:none}
+.login-input:focus{border-color:#1a3a5c}
+.login-btn{width:100%;padding:13px;background:#1a3a5c;color:white;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer}
+.login-btn:hover{background:#142e4a}
+.login-error{background:#FCEBEB;color:#A32D2D;border:1px solid #F09595;border-radius:8px;padding:10px;font-size:13px;margin-bottom:12px;display:none}
+.sidebar{position:fixed;top:0;left:0;width:220px;height:100vh;background:#1a3a5c;color:white;padding:1.5rem 1rem;display:flex;flex-direction:column;gap:4px;z-index:100;overflow-y:auto}
+.sidebar-logo{display:flex;align-items:center;gap:10px;padding:0 8px 1.25rem;border-bottom:1px solid rgba(255,255,255,0.15);margin-bottom:0.5rem}
+.sidebar-logo .icon{font-size:24px}
+.sidebar-logo h1{font-size:14px;font-weight:700;line-height:1.3}
+.nav-item{padding:9px 12px;border-radius:8px;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:9px;color:rgba(255,255,255,0.7);transition:all 0.15s}
+.nav-item:hover{background:rgba(255,255,255,0.1);color:white}
+.nav-item.active{background:rgba(255,255,255,0.18);color:white;font-weight:500}
+.nav-logout{margin-top:auto;color:rgba(255,255,255,0.5)}
+.nav-logout:hover{background:rgba(255,0,0,0.15)!important;color:#FCA5A5!important}
+.main{margin-left:220px;padding:1.5rem;min-height:100vh}
+.page{display:none}.page.active{display:block}
+.page-title{font-size:20px;font-weight:700;color:#1a3a5c;margin-bottom:1.25rem}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:1.5rem}
+.stat-card{background:white;border-radius:12px;padding:1.125rem;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+.stat-num{font-size:30px;font-weight:700;color:#1a3a5c}
+.stat-label{font-size:12px;color:#64748b;margin-top:4px}
+.card{background:white;border-radius:12px;padding:1.25rem;margin-bottom:1.25rem;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+.card-title{font-size:15px;font-weight:600;color:#1a3a5c;margin-bottom:1rem}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:9px 12px;font-size:11px;font-weight:600;color:#64748b;border-bottom:1px solid #f1f5f9;background:#f8fafc;text-transform:uppercase;letter-spacing:0.04em}
+td{padding:10px 12px;border-bottom:1px solid #f8fafc;vertical-align:middle}
+tr:hover td{background:#f8fafc}
+input,select,textarea{padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:14px;width:100%;color:#1e293b;background:white;transition:border 0.15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#1a3a5c}
+textarea{resize:vertical;min-height:70px}
+label{display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.04em}
+.form-group{margin-bottom:14px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-row.s1{grid-template-columns:1fr}
+.btn{padding:9px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all 0.15s}
+.btn-primary{background:#1a3a5c;color:white}.btn-primary:hover{background:#142e4a}
+.btn-success{background:#0F6E56;color:white}
+.btn-danger{background:#FCEBEB;color:#A32D2D;border:1px solid #F09595}
+.btn-secondary{background:#f1f5f9;color:#475569}
+.btn-edit{background:#E6F1FB;color:#0C447C;border:1px solid #B5D4F4;padding:5px 10px;font-size:12px;border-radius:6px;cursor:pointer;font-weight:600}
+.btn-sm{padding:5px 12px;font-size:12px}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-member{background:#9FE1CB;color:#04342C}
+.badge-visitor{background:#B5D4F4;color:#042C53}
+.badge-new{background:#FAC775;color:#412402}
+.badge-birthday{background:#F4C0D1;color:#4B1528}
+.badge-done{background:#C0DD97;color:#173404}
+.badge-pending{background:#F7C1C1;color:#501313}
+.alert{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:1rem}
+.alert-success{background:#E1F5EE;color:#085041;border:1px solid #5DCAA5}
+.alert-error{background:#FCEBEB;color:#501313;border:1px solid #F09595}
+.alert-info{background:#E6F1FB;color:#042C53;border:1px solid #85B7EB}
+.avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.member-cell{display:flex;align-items:center;gap:10px}
+.search-row{display:flex;gap:10px;margin-bottom:1rem;align-items:center;flex-wrap:wrap}
+.search-row input{flex:1}
+.flex-between{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:10px}
+.hidden{display:none!important}
+.edit-panel{background:#EFF6FF;border:1.5px solid #B5D4F4;border-radius:12px;padding:1.25rem;margin-bottom:1.25rem}
+.edit-panel .card-title{color:#0C447C}
+.tabs{display:flex;gap:4px;border-bottom:2px solid #f1f5f9;margin-bottom:1.25rem}
+.tab{padding:8px 16px;font-size:13px;cursor:pointer;color:#64748b;border-bottom:2px solid transparent;margin-bottom:-2px;font-weight:500}
+.tab.active{color:#1a3a5c;border-bottom-color:#1a3a5c}
+.stabs{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap}
+.stab{padding:6px 14px;border-radius:20px;border:1.5px solid #e2e8f0;font-size:12px;cursor:pointer;color:#64748b;background:white;font-weight:600}
+.stab.active{background:#1a3a5c;color:white;border-color:#1a3a5c}
+.pb{height:6px;background:#f1f5f9;border-radius:3px;overflow:hidden;margin-top:5px}
+.pf{height:100%;background:#1a3a5c;border-radius:3px}
+.fu-row{display:flex;align-items:flex-start;gap:12px;padding:12px;border-bottom:1px solid #f8fafc}
+.fu-row:last-child{border-bottom:none}
+.cw{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px}
+.cw input[type=checkbox]{width:16px;height:16px;accent-color:#0F6E56;cursor:pointer}
+.bday-row{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid #f8fafc}
+.bday-row:last-child{border-bottom:none}
+.nd{text-align:center;padding:2.5rem;color:#94a3b8;font-size:14px}
+.spinner{display:inline-block;width:18px;height:18px;border:2px solid #e2e8f0;border-top-color:#1a3a5c;border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+.qr-wrap{display:flex;flex-direction:column;align-items:center;gap:1rem;padding:1rem 0}
+.chart-bars{display:flex;align-items:flex-end;gap:10px;height:100px;padding:0 4px}
+.chart-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.chart-bar{width:100%;background:#1a3a5c;border-radius:4px 4px 0 0;min-height:4px}
+.chart-label{font-size:10px;color:#94a3b8;text-align:center}
+.chart-val{font-size:11px;color:#475569;font-weight:600}
+.member-found{border:1px solid #5DCAA5;border-radius:10px;padding:1rem;background:#E1F5EE;margin-bottom:1rem}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-icon">&#9962;</div>
+    <div class="login-title">Mighty Army Network</div>
+    <div class="login-sub">Admin Panel — Enter your password to continue</div>
+    <div class="login-error" id="login-error">Incorrect password. Please try again.</div>
+    <input type="password" class="login-input" id="login-pass" placeholder="Enter password">
+    <button class="login-btn" id="login-btn">Sign In &rarr;</button>
+  </div>
+</div>
+
+<div id="main-app" style="display:none">
+<div class="sidebar">
+  <div class="sidebar-logo"><div class="icon">&#9962;</div><h1>Mighty Army Network</h1></div>
+  <div class="nav-item active" id="nav-dashboard">&#128202; Dashboard</div>
+  <div class="nav-item" id="nav-checkin">&#9989; Sunday Check-in</div>
+  <div class="nav-item" id="nav-members">&#128101; Members</div>
+  <div class="nav-item" id="nav-attendance">&#128203; Attendance</div>
+  <div class="nav-item" id="nav-birthdays">&#127874; Birthdays</div>
+  <div class="nav-item" id="nav-followup">&#128222; Follow-up</div>
+  <div class="nav-item" id="nav-reports">&#128200; Reports</div>
+  <div class="nav-item" id="nav-sms">&#128232; Send SMS</div>
+  <div class="nav-item" id="nav-events">&#127881; Events</div>
+  <div class="nav-item" id="nav-children">&#128100; Children's Ministry</div>
+  <div class="nav-item" id="nav-qrcode">&#128306; QR Code</div>
+  <div style="flex:1"></div>
+  <div class="nav-item nav-logout" id="nav-logout">&#128274; Log Out</div>
+</div>
+
+<div class="main">
+
+<div class="page active" id="page-dashboard">
+  <div class="page-title">Dashboard</div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-num" id="s-members">-</div><div class="stat-label">Total Members</div></div>
+    <div class="stat-card"><div class="stat-num" id="s-today">-</div><div class="stat-label">Today's Check-ins</div></div>
+    <div class="stat-card"><div class="stat-num" id="s-visitors">-</div><div class="stat-label">All-time Visitors</div></div>
+    <div class="stat-card"><div class="stat-num" id="s-bdays">-</div><div class="stat-label">Birthdays This Month</div></div>
+    <div class="stat-card"><div class="stat-num" id="s-fu">-</div><div class="stat-label">Pending Follow-ups</div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:2fr 1fr;gap:1.25rem">
+    <div class="card"><div class="card-title">Recent Sunday attendance</div><div id="d-chart"></div></div>
+    <div class="card"><div class="card-title">Today's check-ins</div><div id="d-today-list" style="max-height:200px;overflow-y:auto"></div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem">
+    <div class="card"><div class="card-title">Upcoming birthdays (14 days)</div><div id="d-bdays"></div></div>
+    <div class="card"><div class="card-title">Pending follow-ups</div><div id="d-fu"></div></div>
+  </div>
+</div>
+
+<div class="page" id="page-checkin">
+  <div class="page-title">Sunday Check-in</div>
+  <div class="card"><div class="flex-between"><div class="card-title" style="margin-bottom:0">Service Date</div><input type="date" id="svc-date" style="max-width:200px"></div></div>
+  <div class="card">
+    <div class="card-title">Look up by phone number</div>
+    <div class="search-row"><input type="tel" id="ci-phone" placeholder="Enter phone number..."><button class="btn btn-primary" id="ci-lookup-btn">&#128269; Look Up</button></div>
+    <div id="ci-result"></div>
+    <div id="ci-visitor-form" class="hidden">
+      <div style="background:#FAEEDA;border:1.5px solid #EF9F27;border-radius:10px;padding:1.25rem;margin-top:1rem">
+        <div class="card-title" style="color:#633806;margin-bottom:1rem">Register New Visitor</div>
+        <input type="hidden" id="ci-v-phone">
+        <div class="form-row"><div class="form-group"><label>First Name *</label><input id="ci-v-fn" placeholder="First name"></div><div class="form-group"><label>Last Name *</label><input id="ci-v-ln" placeholder="Last name"></div></div>
+        <div class="form-row"><div class="form-group"><label>Email</label><input type="email" id="ci-v-em"></div><div class="form-group"><label>Date of Birth</label><input type="date" id="ci-v-db"></div></div>
+        <div class="form-row"><div class="form-group"><label>Gender</label><select id="ci-v-gn"><option value="">Select</option><option>Male</option><option>Female</option></select></div><div class="form-group"><label>Marital Status</label><select id="ci-v-ms"><option value="">Select</option><option>Single</option><option>Married</option><option>Divorced</option><option>Widowed</option></select></div></div>
+        <div class="form-row"><div class="form-group"><label>Residential Area</label><input id="ci-v-ar" placeholder="e.g. Tema"></div><div class="form-group"><label>How did you hear about us?</label><select id="ci-v-src"><option value="">Select</option><option>Friend / Family</option><option>Social Media</option><option>Flyer / Poster</option><option>Walked in</option><option>Other</option></select></div></div>
+        <div style="display:flex;gap:10px;margin-top:8px"><button class="btn btn-success" id="ci-reg-btn">Register &amp; Check In</button><button class="btn btn-secondary" id="ci-cancel-btn">Cancel</button></div>
+      </div>
+    </div>
+  </div>
+  <div class="card"><div class="flex-between"><div class="card-title" style="margin-bottom:0">Today's check-ins (<span id="ci-count">0</span>)</div><button class="btn btn-secondary btn-sm" id="ci-clear-btn">Clear today</button></div><div id="ci-list" style="margin-top:1rem;max-height:350px;overflow-y:auto"></div></div>
+</div>
+
+<div class="page" id="page-members">
+  <div class="tabs"><div class="tab active" id="mtab-list">Member list</div><div class="tab" id="mtab-add">Add member</div></div>
+  <div id="m-list-tab">
+    <div class="search-row">
+      <input id="m-search" placeholder="Search by name or phone...">
+      <select id="m-type-filter" style="max-width:160px"><option value="">All types</option><option value="member">Member</option><option value="visitor">Visitor</option></select>
+      <button class="btn btn-primary btn-sm" id="m-export-btn">&#11015; Export</button>
+      <button class="btn btn-success btn-sm" id="m-import-toggle-btn">&#11014; Import Excel</button>
+    </div>
+    <div id="import-wrap" class="hidden">
+      <div style="background:#E1F5EE;border:1.5px solid #5DCAA5;border-radius:12px;padding:1.25rem;margin-bottom:1.25rem">
+        <div class="card-title" style="color:#085041;margin-bottom:0.5rem">Import Members from Excel / CSV</div>
+        <p style="font-size:13px;color:#0F6E56;margin-bottom:1rem">Columns: <strong>First Name, Last Name, Phone, Email, Gender, Date of Birth, Marital Status, Type, Cell Group, Area, Occupation, Notes</strong></p>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <input type="file" id="import-file" accept=".xlsx,.xls,.csv" style="max-width:300px;font-size:13px">
+          <button class="btn btn-success" id="import-now-btn">Import Now</button>
+          <button class="btn btn-secondary btn-sm" id="import-template-btn">&#11015; Download Template</button>
+        </div>
+        <div id="import-result" style="margin-top:1rem"></div>
+      </div>
+    </div>
+    <div id="edit-wrap" class="hidden">
+      <div class="edit-panel">
+        <div class="card-title">Edit &mdash; <span id="ep-name"></span></div>
+        <input type="hidden" id="ep-id">
+        <div class="form-row"><div class="form-group"><label>First Name</label><input id="ep-fn"></div><div class="form-group"><label>Last Name</label><input id="ep-ln"></div></div>
+        <div class="form-row"><div class="form-group"><label>Phone</label><input id="ep-ph"></div><div class="form-group"><label>Email</label><input type="email" id="ep-em"></div></div>
+        <div class="form-row"><div class="form-group"><label>Gender</label><select id="ep-gn"><option value="">Select</option><option>Male</option><option>Female</option></select></div><div class="form-group"><label>Date of Birth</label><input type="date" id="ep-db"></div></div>
+        <div class="form-row"><div class="form-group"><label>Marital Status</label><select id="ep-ms"><option value="">Select</option><option>Single</option><option>Married</option><option>Divorced</option><option>Widowed</option></select></div><div class="form-group"><label>Occupation</label><input id="ep-oc"></div></div>
+        <div class="form-row"><div class="form-group"><label>Residential Area</label><input id="ep-ar"></div><div class="form-group"><label>Cell Group</label><input id="ep-cl"></div></div>
+        <div class="form-row"><div class="form-group"><label>Member Type</label><select id="ep-type"><option value="member">Church Member</option><option value="visitor">Visitor</option></select></div></div>
+        <div class="form-row s1"><div class="form-group"><label>Notes</label><textarea id="ep-nt"></textarea></div></div>
+        <div style="display:flex;gap:10px;margin-top:4px"><button class="btn btn-primary" id="ep-save-btn">Save Changes</button><button class="btn btn-secondary" id="ep-cancel-btn">Cancel</button></div>
+      </div>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden"><table><thead><tr><th>Name</th><th>Phone</th><th>Birthday</th><th>Marital</th><th>Type</th><th>Cell Group</th><th>Visits</th><th>Actions</th></tr></thead><tbody id="m-tbody"></tbody></table></div>
+  </div>
+  <div id="m-add-tab" class="hidden">
+    <div class="card">
+      <div class="card-title">Add new member / visitor</div>
+      <div class="form-row"><div class="form-group"><label>First Name *</label><input id="a-fn" placeholder="First name"></div><div class="form-group"><label>Last Name *</label><input id="a-ln" placeholder="Last name"></div></div>
+      <div class="form-row"><div class="form-group"><label>Phone *</label><input type="tel" id="a-ph" placeholder="e.g. 0244123456"></div><div class="form-group"><label>Email</label><input type="email" id="a-em"></div></div>
+      <div class="form-row"><div class="form-group"><label>Gender</label><select id="a-gn"><option value="">Select</option><option>Male</option><option>Female</option></select></div><div class="form-group"><label>Date of Birth</label><input type="date" id="a-db"></div></div>
+      <div class="form-row"><div class="form-group"><label>Marital Status</label><select id="a-ms"><option value="">Select</option><option>Single</option><option>Married</option><option>Divorced</option><option>Widowed</option></select></div><div class="form-group"><label>Occupation</label><input id="a-oc"></div></div>
+      <div class="form-row"><div class="form-group"><label>Residential Area</label><input id="a-ar"></div><div class="form-group"><label>Cell Group</label><input id="a-cl"></div></div>
+      <div class="form-row"><div class="form-group"><label>Member Type</label><select id="a-type"><option value="member">Church Member</option><option value="visitor">Visitor</option></select></div></div>
+      <div class="form-row s1"><div class="form-group"><label>Notes</label><textarea id="a-nt"></textarea></div></div>
+      <div style="display:flex;gap:10px;margin-top:4px"><button class="btn btn-primary" id="a-save-btn">Save Member</button><button class="btn btn-secondary" id="a-cancel-btn">Cancel</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-attendance">
+  <div class="flex-between"><div class="page-title" style="margin-bottom:0">Attendance Records</div><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><input type="date" id="att-filter" style="max-width:180px"><button class="btn btn-secondary btn-sm" id="att-clear-btn">Clear</button><button class="btn btn-primary btn-sm" id="att-export-btn">&#11015; Export CSV</button></div></div>
+  <div style="height:1rem"></div>
+  <div class="card" style="padding:0;overflow:hidden"><table><thead><tr><th>Date</th><th>Name</th><th>Phone</th><th>Type</th><th>Check-in Time</th></tr></thead><tbody id="att-tbody"></tbody></table></div>
+</div>
+
+<div class="page" id="page-birthdays">
+  <div class="page-title">Birthday Tracker</div>
+  <div class="stabs"><div class="stab active" id="btab-upcoming">Upcoming (30 days)</div><div class="stab" id="btab-thismonth">This month</div><div class="stab" id="btab-all">All members</div></div>
+  <div class="card" style="padding:0;overflow:hidden"><div id="bday-list"></div></div>
+</div>
+
+<div class="page" id="page-followup">
+  <div class="page-title">Follow-up Tracker</div>
+  <div class="card" style="margin-bottom:1.25rem">
+    <div style="font-size:12px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px">Mode</div>
+    <div style="display:flex;gap:8px">
+      <div class="stab active" id="fumode-auto">Last Sunday (Auto)</div>
+      <div class="stab" id="fumode-manual">Pick a specific Sunday</div>
+    </div>
+    <div id="fu-date-picker" class="hidden" style="margin-top:1rem">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <input type="date" id="fu-date" style="max-width:180px">
+        <select id="fu-date-quick" style="max-width:260px"><option value="">— Or pick from recorded Sundays —</option></select>
+      </div>
+    </div>
+  </div>
+  <div id="fu-summary" style="margin-bottom:1rem"></div>
+  <div class="flex-between">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <div class="stabs" style="margin-bottom:0"><div class="stab active" id="futab-pending">Pending</div><div class="stab" id="futab-done">Done</div><div class="stab" id="futab-all">All absent</div></div>
+      <select id="fu-type-filter" style="max-width:160px;font-size:12px"><option value="all">Members + Visitors</option><option value="member">Members only</option><option value="visitor">Visitors only</option></select>
+    </div>
+    <button class="btn btn-secondary btn-sm" id="fu-refresh-btn">&#8635; Refresh</button>
+  </div>
+  <div style="height:1rem"></div>
+  <div class="card" style="padding:0;overflow:hidden"><div id="fu-list"></div></div>
+</div>
+
+<div class="page" id="page-reports">
+  <div class="page-title">Reports</div>
+  <div class="card"><div class="card-title">Attendance by Sunday</div><div id="r-table"></div></div>
+  <div class="card"><div class="card-title">Top attendees</div><div id="r-top"></div></div>
+</div>
+
+<div class="page" id="page-sms">
+  <div class="page-title">Send SMS</div>
+  <div style="display:grid;grid-template-columns:2fr 1fr;gap:1.25rem;align-items:start">
+    <div>
+      <div class="card">
+        <div class="card-title">Compose Message</div>
+        <div class="form-group"><label>Send To</label><select id="sms-group"><option value="all">Everyone (Members + Visitors)</option><option value="member">Church Members only</option><option value="visitor">Visitors only</option></select></div>
+        <div class="form-group"><label>Message (<span id="sms-chars">0</span>/160 characters)</label><textarea id="sms-message" placeholder="Type your message here..." style="min-height:120px"></textarea></div>
+        <div id="sms-preview" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;margin-bottom:14px;font-size:13px;color:#475569;display:none"><div style="font-size:11px;font-weight:600;color:#94a3b8;margin-bottom:6px;text-transform:uppercase">Preview</div><div id="sms-preview-text"></div></div>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><button class="btn btn-primary" id="sms-send-btn">&#128232; Send SMS</button><span id="sms-recipient-count" style="font-size:13px;color:#64748b"></span></div>
+        <div id="sms-result" style="margin-top:1rem"></div>
+      </div>
+      <div class="card"><div class="card-title">SMS History</div><div id="sms-history"><div class="nd">No messages sent yet.</div></div></div>
+    </div>
+    <div>
+      <div class="card"><div class="card-title">SMS Balance</div><div id="sms-balance" style="font-size:28px;font-weight:700;color:#1a3a5c;margin-bottom:4px">-</div><div style="font-size:12px;color:#64748b;margin-bottom:12px">Credits remaining</div><button class="btn btn-secondary btn-sm" id="sms-refresh-btn">&#8635; Refresh</button></div>
+      <div class="card"><div class="card-title">Quick Messages</div><div style="display:flex;flex-direction:column;gap:8px"><button class="btn btn-secondary btn-sm" id="qm-reminder" style="text-align:left">&#128197; Sunday reminder</button><button class="btn btn-secondary btn-sm" id="qm-birthday" style="text-align:left">&#127874; Birthday wish</button><button class="btn btn-secondary btn-sm" id="qm-welcome" style="text-align:left">&#128591; Welcome new member</button><button class="btn btn-secondary btn-sm" id="qm-missed" style="text-align:left">&#10084; We missed you</button></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-events">
+  <div class="page-title">Events &amp; Registration</div>
+  <div id="events-list-view">
+    <div class="flex-between" style="margin-bottom:1.25rem"><p style="font-size:13px;color:#64748b">Manage church programmes and track registrations.</p><button class="btn btn-primary" id="ev-create-btn">+ Create New Event</button></div>
+    <div id="events-grid"></div>
+  </div>
+  <div id="event-form-view" class="hidden">
+    <div class="card">
+      <div class="card-title" id="event-form-title">Create New Event</div>
+      <input type="hidden" id="ef-id">
+      <div class="form-row"><div class="form-group"><label>Event Name *</label><input id="ef-name" placeholder="e.g. GLOPP May 2026"></div><div class="form-group"><label>Event Date *</label><input type="date" id="ef-date"></div></div>
+      <div class="form-row"><div class="form-group"><label>Venue</label><input id="ef-venue" placeholder="e.g. Main Auditorium"></div><div class="form-group"><label>Time</label><input type="time" id="ef-time"></div></div>
+      <div class="form-row s1"><div class="form-group"><label>Description</label><textarea id="ef-desc" placeholder="Brief description..."></textarea></div></div>
+      <div style="display:flex;gap:10px;margin-top:4px"><button class="btn btn-primary" id="ef-save-btn">Save Event</button><button class="btn btn-secondary" id="ef-cancel-btn">Cancel</button></div>
+    </div>
+  </div>
+  <div id="event-detail-view" class="hidden">
+    <button class="btn btn-secondary btn-sm" id="ev-back-btn" style="margin-bottom:1.25rem">&larr; Back to Events</button>
+    <div class="card" id="event-detail-header"></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:1.25rem" id="event-stats"></div>
+    <div class="card">
+      <div class="flex-between"><div class="card-title" style="margin-bottom:0">Registrations</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-success btn-sm" id="ev-import-toggle-btn">&#11014; Import Excel</button><button class="btn btn-primary btn-sm" id="ev-export-reg-btn">&#11015; Export Registered</button><button class="btn btn-secondary btn-sm" id="ev-export-ci-btn">&#11015; Export Checked-in</button><button class="btn btn-secondary btn-sm" id="ev-add-btn">+ Add Manually</button></div></div>
+      <div id="event-manual-wrap" class="hidden" style="background:#f8fafc;border-radius:10px;padding:1rem;margin-top:1rem">
+        <div style="font-size:13px;font-weight:600;color:#1a3a5c;margin-bottom:10px">Register someone manually</div>
+        <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap"><div style="flex:1;min-width:160px"><label>Phone number</label><input id="er-phone" placeholder="0244123456"></div><button class="btn btn-primary" id="er-lookup-btn">Look Up</button></div>
+        <div id="er-lookup-result" style="margin-top:10px"></div>
+        <div id="er-new-form" class="hidden" style="margin-top:10px">
+          <div class="form-row"><div class="form-group"><label>First Name *</label><input id="er-fn"></div><div class="form-group"><label>Last Name *</label><input id="er-ln"></div></div>
+          <div class="form-row"><div class="form-group"><label>Email</label><input type="email" id="er-em"></div><div class="form-group"><label>Gender</label><select id="er-gn"><option value="">Select</option><option>Male</option><option>Female</option></select></div></div>
+          <div style="display:flex;gap:8px;margin-top:8px"><button class="btn btn-success" id="er-reg-btn">Register</button><button class="btn btn-secondary" id="er-newcancel-btn">Cancel</button></div>
+        </div>
+      </div>
+      <div id="event-import-wrap" class="hidden" style="background:#E1F5EE;border:1.5px solid #5DCAA5;border-radius:10px;padding:1rem;margin-top:1rem">
+        <div style="font-size:13px;font-weight:600;color:#085041;margin-bottom:8px">Import registrations from Excel</div>
+        <p style="font-size:12px;color:#0F6E56;margin-bottom:10px">Columns: <strong>First Name, Last Name, Phone, Email, Gender</strong></p>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><input type="file" id="event-import-file" accept=".xlsx,.xls,.csv" style="max-width:280px;font-size:13px"><button class="btn btn-success" id="ev-import-now-btn">Import Now</button><button class="btn btn-secondary btn-sm" id="ev-template-btn">&#11015; Template</button></div>
+        <div id="event-import-result" style="margin-top:10px"></div>
+      </div>
+      <div id="event-reg-list" style="margin-top:1rem"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Send SMS to Registrants</div>
+      <div class="form-group"><label>Message</label><textarea id="event-sms-msg" placeholder="Type your message to all registrants..." style="min-height:80px"></textarea></div>
+      <div style="display:flex;align-items:center;gap:12px"><button class="btn btn-primary" id="ev-sms-btn">&#128232; Send SMS to All Registrants</button><span id="event-sms-result" style="font-size:13px"></span></div>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-children">
+  <div class="page-title">Children's Ministry</div>
+  <div class="tabs"><div class="tab active" id="ctab-list">Children list</div><div class="tab" id="ctab-add">Add child</div><div class="tab" id="ctab-attendance">Attendance</div></div>
+
+  <!-- CHILDREN LIST -->
+  <div id="c-list-tab">
+    <div class="search-row">
+      <input id="c-search" placeholder="Search by name...">
+      <select id="c-age-filter" style="max-width:160px"><option value="">All age groups</option><option value="0-3">0-3 years</option><option value="4-7">4-7 years</option><option value="8-12">8-12 years</option></select>
+      <button class="btn btn-primary btn-sm" id="c-export-btn">&#11015; Export</button>
+    </div>
+    <div id="c-edit-wrap" class="hidden">
+      <div class="edit-panel">
+        <div class="card-title">Edit Child &mdash; <span id="cep-name"></span></div>
+        <input type="hidden" id="cep-id">
+        <div class="form-row"><div class="form-group"><label>First Name</label><input id="cep-fn"></div><div class="form-group"><label>Last Name</label><input id="cep-ln"></div></div>
+        <div class="form-row"><div class="form-group"><label>Date of Birth *</label><input type="date" id="cep-dob"></div><div class="form-group"><label>Gender</label><select id="cep-gn"><option value="">Select</option><option>Male</option><option>Female</option></select></div></div>
+        <div class="form-row s1"><div class="form-group"><label>Parent/Guardian Name</label><input id="cep-par" placeholder="Name of parent or guardian"></div></div>
+        <div class="form-row"><div class="form-group"><label>Parent/Guardian Phone</label><input id="cep-parph" placeholder="e.g. 0244123456"></div><div class="form-group"><label>Notes</label><input id="cep-nt" placeholder="Optional"></div></div>
+        <div style="display:flex;gap:10px;margin-top:4px"><button class="btn btn-primary" id="cep-save-btn">Save Changes</button><button class="btn btn-secondary" id="cep-cancel-btn">Cancel</button></div>
+      </div>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden"><table><thead><tr><th>Name</th><th>Age Group</th><th>Date of Birth</th><th>Gender</th><th>Parent/Guardian</th><th>Parent Phone</th><th>Actions</th></tr></thead><tbody id="c-tbody"></tbody></table></div>
+  </div>
+
+  <!-- ADD CHILD -->
+  <div id="c-add-tab" class="hidden">
+    <div class="card">
+      <div class="card-title">Add new child</div>
+      <div class="form-row"><div class="form-group"><label>First Name *</label><input id="ca-fn" placeholder="First name"></div><div class="form-group"><label>Last Name *</label><input id="ca-ln" placeholder="Last name"></div></div>
+      <div class="form-row"><div class="form-group"><label>Date of Birth *</label><input type="date" id="ca-dob"></div><div class="form-group"><label>Gender</label><select id="ca-gn"><option value="">Select</option><option>Male</option><option>Female</option></select></div></div>
+      <div style="background:#E6F1FB;border:1px solid #B5D4F4;border-radius:8px;padding:1rem;margin-bottom:14px">
+        <div style="font-size:13px;font-weight:600;color:#0C447C;margin-bottom:8px">Parent / Guardian</div>
+        <div class="search-row" style="margin-bottom:10px"><input id="ca-par-search" placeholder="Search existing member by phone..." style="flex:1"><button class="btn btn-secondary btn-sm" id="ca-par-search-btn">Search</button></div>
+        <div id="ca-par-result" style="margin-bottom:10px"></div>
+        <input type="hidden" id="ca-par-id">
+        <div class="form-row"><div class="form-group"><label>Parent/Guardian Name *</label><input id="ca-par" placeholder="Full name"></div><div class="form-group"><label>Parent/Guardian Phone *</label><input id="ca-parph" placeholder="e.g. 0244123456"></div></div>
+      </div>
+      <div class="form-row s1"><div class="form-group"><label>Notes</label><input id="ca-nt" placeholder="Optional"></div></div>
+      <div style="display:flex;gap:10px;margin-top:4px"><button class="btn btn-primary" id="ca-save-btn">Save Child</button><button class="btn btn-secondary" id="ca-cancel-btn">Cancel</button></div>
+    </div>
+  </div>
+
+  <!-- CHILDREN ATTENDANCE -->
+  <div id="c-attendance-tab" class="hidden">
+    <div class="card">
+      <div class="flex-between">
+        <div class="card-title" style="margin-bottom:0">Record Attendance</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="date" id="c-att-date" style="max-width:180px">
+          <button class="btn btn-primary btn-sm" id="c-att-export-btn">&#11015; Export</button>
+        </div>
+      </div>
+      <p style="font-size:13px;color:#64748b;margin:0.75rem 0">Tick each child who attended. Changes are saved automatically.</p>
+      <div id="c-att-list"></div>
+    </div>
+    <div class="card"><div class="card-title">Attendance History</div><div id="c-att-history"></div></div>
+  </div>
+</div>
+
+<div class="page" id="page-qrcode">
+  <div class="page-title">QR Code</div>
+  <div class="card">
+    <div class="card-title">Check-in page URL</div>
+    <p style="font-size:13px;color:#64748b;margin-bottom:1rem">Paste your check-in or event registration URL to generate a QR code.</p>
+    <div class="search-row"><input type="url" id="qr-url-input" placeholder="https://your-url.netlify.app"></div>
+    <div id="qr-output" class="qr-wrap" style="display:none">
+      <div id="qr-canvas" style="background:white;padding:12px;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,0.1)"></div>
+      <div style="font-size:13px;color:#64748b;word-break:break-all;text-align:center;max-width:400px" id="qr-url-display"></div>
+      <div style="display:flex;gap:10px"><button class="btn btn-primary" id="qr-download-btn">&#11015; Download QR Code</button><button class="btn btn-secondary" id="qr-print-btn">&#128424; Print</button></div>
+    </div>
+  </div>
+</div>
+
+</div>
+</div>
+
+<script>
+var SUPABASE_URL='https://ljejpmvlbtipgasxwhnk.supabase.co';
+var SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxqZWpwbXZsYnRpcGdhc3h3aG5rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNzAzMzcsImV4cCI6MjA5Mzg0NjMzN30.taXJcYdZfJ6fZJ6BztSznBSVjJVhDbYxohzRuGOzCow';
+var ARKESEL_API_KEY='YkNhT3htZHNuTG9mdHJwVElXU3U';
+var ARKESEL_SENDER='PS. DERRICK';
+var ADMIN_PASSWORD='MAN2025';
+var EVENT_REG_URL='https://calm-gelato-80955d.netlify.app';
+
+var supabaseClient=null;
+var db=null;
+var today=new Date().toISOString().split('T')[0];
+var COLS=['#1a3a5c','#0F6E56','#993C1D','#533AB7','#854F0B','#3B6D11'];
+var fuMode='auto';
+var fuTab='pending';
+var bdayTab='upcoming';
+var currentEventId=null;
+var smsHistory=[];
+
+function ac(str){var h=String(str).split('').reduce(function(a,c){return a+c.charCodeAt(0);},0);return COLS[h%COLS.length];}
+function ini(f,l){return((f||'')[0]||'').toUpperCase()+((l||'')[0]||'').toUpperCase();}
+function fd(d){if(!d)return'';return new Date(d+'T00:00:00').toLocaleDateString('en-GH',{weekday:'short',year:'numeric',month:'short',day:'numeric'});}
+function fds(d){if(!d)return'';return new Date(d+'T00:00:00').toLocaleDateString('en-GH',{month:'short',day:'numeric'});}
+function dtb(dob){if(!dob)return 999;var t=new Date();t.setHours(0,0,0,0);var d=new Date(dob);var nx=new Date(t.getFullYear(),d.getMonth(),d.getDate());if(nx<t)nx.setFullYear(t.getFullYear()+1);return Math.round((nx-t)/864e5);}
+function fbf(dob){if(!dob)return'-';var d=new Date(dob+'T00:00:00'),age=new Date().getFullYear()-d.getFullYear();return d.toLocaleDateString('en-GH',{month:'long',day:'numeric'})+' (turns '+age+')';}
+function getSvcDate(){var el=document.getElementById('svc-date');return(el&&el.value)?el.value:today;}
+function ftime(t){if(!t)return'';var p=t.split(':');var h=parseInt(p[0]);return(h>12?h-12:h)+':'+(p[1]||'00')+' '+(h>=12?'PM':'AM');}
+
+// LOGIN
+document.getElementById('login-btn').addEventListener('click',doLogin);
+document.getElementById('login-pass').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
+
+function doLogin(){
+  var pass=document.getElementById('login-pass').value;
+  if(pass===ADMIN_PASSWORD){
+    sessionStorage.setItem('man_auth','1');
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('main-app').style.display='block';
+    initApp();
+  } else {
+    var err=document.getElementById('login-error');
+    err.style.display='block';
+    document.getElementById('login-pass').value='';
+  }
+}
+
+document.getElementById('nav-logout').addEventListener('click',function(){
+  if(!confirm('Are you sure you want to log out?'))return;
+  sessionStorage.removeItem('man_auth');
+  document.getElementById('main-app').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('login-pass').value='';
+});
+
+function initApp(){
+  var attempts=0;
+  function tryInit(){
+    attempts++;
+    if(window.supabase&&window.supabase.createClient){
+      db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+      document.getElementById('svc-date').value=today;
+      bindNavEvents();
+      bindAllEvents();
+      showPage('dashboard');
+    } else if(attempts<20){
+      setTimeout(tryInit,300);
+    } else {
+      alert('Failed to load required libraries. Please refresh the page.');
+    }
+  }
+  tryInit();
+}
+
+if(sessionStorage.getItem('man_auth')==='1'){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('main-app').style.display='block';
+  window.addEventListener('load',function(){initApp();});
+}
+
+function bindNavEvents(){
+  var pages=['dashboard','checkin','members','attendance','birthdays','followup','reports','sms','events','children','qrcode'];
+  pages.forEach(function(p){
+    var el=document.getElementById('nav-'+p);
+    if(el)el.addEventListener('click',function(){showPage(p);});
+  });
+}
+
+function showPage(id){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
+  var pg=document.getElementById('page-'+id);
+  var nv=document.getElementById('nav-'+id);
+  if(pg)pg.classList.add('active');
+  if(nv)nv.classList.add('active');
+  if(id==='dashboard')loadDashboard();
+  if(id==='members')renderMembers();
+  if(id==='attendance')renderAttendance();
+  if(id==='birthdays')loadBirthdays('upcoming');
+  if(id==='followup'){fuMode='auto';document.getElementById('fumode-auto').classList.add('active');document.getElementById('fumode-manual').classList.remove('active');document.getElementById('fu-date-picker').classList.add('hidden');loadFollowups();}
+  if(id==='reports')loadReports();
+  if(id==='checkin')renderCheckinList();
+  if(id==='sms'){updateSMSCount();checkBalance();}
+  if(id==='events')loadEvents();
+  if(id==='children'){showCTab('list');}
+}
+
+function bindAllEvents(){
+  // Check-in
+  document.getElementById('ci-lookup-btn').addEventListener('click',adminLookup);
+  document.getElementById('ci-phone').addEventListener('keydown',function(e){if(e.key==='Enter')adminLookup();});
+  document.getElementById('ci-reg-btn').addEventListener('click',adminRegisterVisitor);
+  document.getElementById('ci-cancel-btn').addEventListener('click',function(){document.getElementById('ci-visitor-form').classList.add('hidden');});
+  document.getElementById('ci-clear-btn').addEventListener('click',clearTodayCheckins);
+  document.getElementById('svc-date').addEventListener('change',renderCheckinList);
+
+  // Members
+  document.getElementById('mtab-list').addEventListener('click',function(){showMTab('list');});
+  document.getElementById('mtab-add').addEventListener('click',function(){showMTab('add');});
+  document.getElementById('m-search').addEventListener('input',renderMembers);
+  document.getElementById('m-type-filter').addEventListener('change',renderMembers);
+  document.getElementById('m-export-btn').addEventListener('click',exportMembers);
+  document.getElementById('m-import-toggle-btn').addEventListener('click',function(){document.getElementById('import-wrap').classList.toggle('hidden');});
+  document.getElementById('import-now-btn').addEventListener('click',importMembers);
+  document.getElementById('import-template-btn').addEventListener('click',downloadImportTemplate);
+  document.getElementById('ep-save-btn').addEventListener('click',saveEdit);
+  document.getElementById('ep-cancel-btn').addEventListener('click',closeEdit);
+  document.getElementById('a-save-btn').addEventListener('click',addMember);
+  document.getElementById('a-cancel-btn').addEventListener('click',function(){showMTab('list');});
+
+  // Attendance
+  document.getElementById('att-filter').addEventListener('change',renderAttendance);
+  document.getElementById('att-clear-btn').addEventListener('click',function(){document.getElementById('att-filter').value='';renderAttendance();});
+  document.getElementById('att-export-btn').addEventListener('click',exportCSV);
+
+  // Birthdays
+  document.getElementById('btab-upcoming').addEventListener('click',function(){setActiveStab('btab','upcoming');loadBirthdays('upcoming');});
+  document.getElementById('btab-thismonth').addEventListener('click',function(){setActiveStab('btab','thismonth');loadBirthdays('thismonth');});
+  document.getElementById('btab-all').addEventListener('click',function(){setActiveStab('btab','all');loadBirthdays('all');});
+
+  // Follow-up
+  document.getElementById('fumode-auto').addEventListener('click',function(){setFUMode('auto');});
+  document.getElementById('fumode-manual').addEventListener('click',function(){setFUMode('manual');});
+  document.getElementById('fu-date').addEventListener('change',loadFollowups);
+  document.getElementById('fu-date-quick').addEventListener('change',function(){if(this.value){document.getElementById('fu-date').value=this.value;loadFollowups();}});
+  document.getElementById('fu-refresh-btn').addEventListener('click',loadFollowups);
+  document.getElementById('fu-type-filter').addEventListener('change',loadFollowups);
+  document.getElementById('futab-pending').addEventListener('click',function(){fuTab='pending';setActiveStab('futab','pending');loadFollowups();});
+  document.getElementById('futab-done').addEventListener('click',function(){fuTab='done';setActiveStab('futab','done');loadFollowups();});
+  document.getElementById('futab-all').addEventListener('click',function(){fuTab='all';setActiveStab('futab','all');loadFollowups();});
+
+  // SMS
+  document.getElementById('sms-message').addEventListener('input',updateCharCount);
+  document.getElementById('sms-group').addEventListener('change',updateSMSCount);
+  document.getElementById('sms-send-btn').addEventListener('click',sendSMS);
+  document.getElementById('sms-refresh-btn').addEventListener('click',checkBalance);
+  document.getElementById('qm-reminder').addEventListener('click',function(){setQuickMsg('reminder');});
+  document.getElementById('qm-birthday').addEventListener('click',function(){setQuickMsg('birthday');});
+  document.getElementById('qm-welcome').addEventListener('click',function(){setQuickMsg('welcome');});
+  document.getElementById('qm-missed').addEventListener('click',function(){setQuickMsg('missed');});
+
+  // Events
+  document.getElementById('ev-create-btn').addEventListener('click',function(){showEventForm(null);});
+  document.getElementById('ef-save-btn').addEventListener('click',saveEvent);
+  document.getElementById('ef-cancel-btn').addEventListener('click',showEventsListView);
+  document.getElementById('ev-back-btn').addEventListener('click',showEventsListView);
+  document.getElementById('ev-import-toggle-btn').addEventListener('click',function(){document.getElementById('event-import-wrap').classList.toggle('hidden');});
+  document.getElementById('ev-export-reg-btn').addEventListener('click',exportEventRegistrations);
+  document.getElementById('ev-export-ci-btn').addEventListener('click',exportEventCheckins);
+  document.getElementById('ev-add-btn').addEventListener('click',function(){document.getElementById('event-manual-wrap').classList.toggle('hidden');});
+  document.getElementById('er-lookup-btn').addEventListener('click',lookupEventReg);
+  document.getElementById('er-phone').addEventListener('keydown',function(e){if(e.key==='Enter')lookupEventReg();});
+  document.getElementById('er-reg-btn').addEventListener('click',registerNewPersonForEvent);
+  document.getElementById('er-newcancel-btn').addEventListener('click',function(){document.getElementById('er-new-form').classList.add('hidden');});
+  document.getElementById('ev-import-now-btn').addEventListener('click',importEventRegistrations);
+  document.getElementById('ev-template-btn').addEventListener('click',downloadEventTemplate);
+  document.getElementById('ev-sms-btn').addEventListener('click',sendEventSMS);
+
+  // Children
+  document.getElementById('ctab-list').addEventListener('click',function(){showCTab('list');});
+  document.getElementById('ctab-add').addEventListener('click',function(){showCTab('add');});
+  document.getElementById('ctab-attendance').addEventListener('click',function(){showCTab('attendance');});
+  document.getElementById('c-search').addEventListener('input',renderChildren);
+  document.getElementById('c-age-filter').addEventListener('change',renderChildren);
+  document.getElementById('c-export-btn').addEventListener('click',exportChildrenList);
+  document.getElementById('cep-save-btn').addEventListener('click',saveChildEdit);
+  document.getElementById('cep-cancel-btn').addEventListener('click',function(){document.getElementById('c-edit-wrap').classList.add('hidden');});
+  document.getElementById('ca-par-search-btn').addEventListener('click',searchParentMember);
+  document.getElementById('ca-save-btn').addEventListener('click',addChild);
+  document.getElementById('ca-cancel-btn').addEventListener('click',function(){showCTab('list');});
+  document.getElementById('c-att-date').addEventListener('change',loadChildrenAttendance);
+  document.getElementById('c-att-export-btn').addEventListener('click',exportChildrenAttendance);
+
+  // QR Code
+  document.getElementById('qr-url-input').addEventListener('input',generateQR);
+  document.getElementById('qr-download-btn').addEventListener('click',downloadQR);
+  document.getElementById('qr-print-btn').addEventListener('click',printQR);
+}
+
+function setActiveStab(prefix,val){
+  document.querySelectorAll('[id^="'+prefix+'-"]').forEach(function(el){el.classList.remove('active');});
+  var el=document.getElementById(prefix+'-'+val);
+  if(el)el.classList.add('active');
+}
+
+// DASHBOARD
+async function loadDashboard(){
+  var res=await Promise.all([
+    db.from('members').select('id',{count:'exact',head:true}).eq('type','member'),
+    db.from('attendance').select('id',{count:'exact',head:true}).eq('service_date',today),
+    db.from('attendance').select('id',{count:'exact',head:true}).eq('first_visit',true),
+    db.from('attendance').select('service_date').order('service_date',{ascending:false}).limit(200)
+  ]);
+  document.getElementById('s-members').textContent=res[0].count||0;
+  document.getElementById('s-today').textContent=res[1].count||0;
+  document.getElementById('s-visitors').textContent=res[2].count||0;
+  var mo=new Date().getMonth();
+  var allM=await db.from('members').select('dob').not('dob','is',null);
+  document.getElementById('s-bdays').textContent=(allM.data||[]).filter(function(m){return new Date(m.dob).getMonth()===mo;}).length;
+  var pfu=await getPendingFU();
+  document.getElementById('s-fu').textContent=pfu.filter(function(p){return!p.done;}).length;
+  var sun={};(res[3].data||[]).forEach(function(a){if(!sun[a.service_date])sun[a.service_date]=0;sun[a.service_date]++;});
+  var dates=Object.keys(sun).sort().slice(-6);
+  var ce=document.getElementById('d-chart');
+  if(!dates.length){ce.innerHTML='<div class="nd" style="padding:1rem">No attendance data yet.</div>';}
+  else{var mx=Math.max.apply(null,dates.map(function(d){return sun[d];}).concat([1]));ce.innerHTML='<div class="chart-bars">'+dates.map(function(d){return'<div class="chart-bar-wrap"><div class="chart-val">'+sun[d]+'</div><div class="chart-bar" style="height:'+(Math.round(sun[d]/mx*80)+4)+'px"></div><div class="chart-label">'+d.slice(5)+'</div></div>';}).join('')+'</div>';}
+  var tl=await db.from('attendance').select('*').eq('service_date',today).order('created_at',{ascending:false}).limit(8);
+  var tle=document.getElementById('d-today-list');
+  tle.innerHTML=(tl.data&&tl.data.length)?tl.data.map(function(a){return'<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f8fafc;font-size:13px"><span style="font-weight:500">'+a.name+(a.first_visit?' <span class="badge badge-new">New</span>':'')+'</span><span class="badge badge-'+a.type+'">'+a.type+'</span></div>';}).join(''):'<div class="nd" style="padding:1rem">No check-ins today.</div>';
+  var bm=await db.from('members').select('id,fname,lname,dob,phone').not('dob','is',null);
+  var up=(bm.data||[]).filter(function(m){return dtb(m.dob)<=14;}).sort(function(a,b){return dtb(a.dob)-dtb(b.dob);}).slice(0,5);
+  document.getElementById('d-bdays').innerHTML=up.length?up.map(function(m){var d=dtb(m.dob);return'<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f8fafc;font-size:13px"><span style="font-weight:500">'+m.fname+' '+m.lname+'</span><span style="color:#64748b">'+(d===0?'Today!':'In '+d+' day'+(d===1?'':'s'))+'</span></div>';}).join(''):'<div class="nd" style="padding:1rem">None in 14 days.</div>';
+  var pf=pfu.filter(function(p){return!p.done;}).slice(0,5);
+  document.getElementById('d-fu').innerHTML=pf.length?pf.map(function(p){return'<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f8fafc;font-size:13px"><span style="font-weight:500">'+p.name+'</span><span style="color:#E24B4A;font-size:12px">Missed '+fds(p.missed_date)+'</span></div>';}).join(''):'<div class="nd" style="padding:1rem">No pending follow-ups.</div>';
+}
+
+// CHECK-IN
+async function adminLookup(){
+  var phone=document.getElementById('ci-phone').value.trim().replace(/\s+/g,'');
+  var res=document.getElementById('ci-result');
+  if(!phone){res.innerHTML='<div class="alert alert-error">Please enter a phone number.</div>';return;}
+  var sd=getSvcDate();
+  var already=await db.from('attendance').select('id,name').eq('phone',phone).eq('service_date',sd).single();
+  if(already.data){res.innerHTML='<div class="alert alert-info">'+already.data.name+' is already checked in.</div>';return;}
+  var member=await db.from('members').select('*').eq('phone',phone).single();
+  if(member.data){
+    var m=member.data;
+    var cnt=await db.from('attendance').select('id',{count:'exact',head:true}).eq('member_id',m.id);
+    res.innerHTML='<div class="member-found"><div style="font-size:16px;font-weight:700;color:#085041;margin-bottom:4px">Found: '+m.fname+' '+m.lname+'</div><div style="font-size:13px;color:#0F6E56">'+m.phone+' &nbsp;&middot;&nbsp; <span class="badge badge-'+m.type+'">'+m.type+'</span> &nbsp;&middot;&nbsp; '+(cnt.count||0)+' visits</div><button class="btn btn-success btn-sm" style="margin-top:10px" data-mid="'+m.id+'" data-mname="'+m.fname+' '+m.lname+'" data-mphone="'+m.phone+'" data-mtype="'+m.type+'" onclick="adminCheckinFromBtn(this)">Check In</button></div>';
+    document.getElementById('ci-visitor-form').classList.add('hidden');
+  }else{
+    document.getElementById('ci-v-phone').value=phone;
+    ['ci-v-fn','ci-v-ln','ci-v-em','ci-v-db','ci-v-ar'].forEach(function(id){document.getElementById(id).value='';});
+    document.getElementById('ci-v-gn').value='';document.getElementById('ci-v-ms').value='';document.getElementById('ci-v-src').value='';
+    document.getElementById('ci-visitor-form').classList.remove('hidden');
+    res.innerHTML='<div class="alert alert-info">New visitor - please fill in the form below.</div>';
+  }
+}
+
+function adminCheckinFromBtn(btn){
+  adminCheckin(btn.dataset.mid,btn.dataset.mname,btn.dataset.mphone,btn.dataset.mtype);
+}
+
+async function adminCheckin(memberId,name,phone,type){
+  var sd=getSvcDate();
+  await db.from('attendance').insert({member_id:memberId,name:name,phone:phone,type:type,service_date:sd,check_in_time:new Date().toLocaleTimeString('en-GH',{hour:'2-digit',minute:'2-digit'}),first_visit:false});
+  document.getElementById('ci-result').innerHTML='<div class="alert alert-success">'+name+' checked in successfully!</div>';
+  document.getElementById('ci-phone').value='';
+  renderCheckinList();
+}
+
+async function adminRegisterVisitor(){
+  var fn=document.getElementById('ci-v-fn').value.trim(),ln=document.getElementById('ci-v-ln').value.trim(),ph=document.getElementById('ci-v-phone').value;
+  if(!fn||!ln){alert('Please enter first and last name.');return;}
+  var ins=await db.from('members').insert({fname:fn,lname:ln,phone:ph,email:document.getElementById('ci-v-em').value.trim(),gender:document.getElementById('ci-v-gn').value,dob:document.getElementById('ci-v-db').value||null,marital_status:document.getElementById('ci-v-ms').value,area:document.getElementById('ci-v-ar').value.trim(),source:document.getElementById('ci-v-src').value,type:'visitor',joined:getSvcDate()}).select().single();
+  if(ins.error){alert('Error: '+ins.error.message);return;}
+  await db.from('attendance').insert({member_id:ins.data.id,name:fn+' '+ln,phone:ph,type:'visitor',service_date:getSvcDate(),check_in_time:new Date().toLocaleTimeString('en-GH',{hour:'2-digit',minute:'2-digit'}),first_visit:true});
+  document.getElementById('ci-visitor-form').classList.add('hidden');
+  document.getElementById('ci-result').innerHTML='<div class="alert alert-success">'+fn+' '+ln+' registered and checked in!</div>';
+  document.getElementById('ci-phone').value='';
+  renderCheckinList();
+}
+
+async function renderCheckinList(){
+  var sd=getSvcDate();
+  var r=await db.from('attendance').select('*').eq('service_date',sd).order('created_at',{ascending:false});
+  document.getElementById('ci-count').textContent=(r.data||[]).length;
+  var el=document.getElementById('ci-list');
+  if(!r.data||!r.data.length){el.innerHTML='<div class="nd">No check-ins yet.</div>';return;}
+  el.innerHTML=r.data.map(function(a){var col=ac(a.member_id||a.name);return'<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid #f8fafc"><div style="display:flex;align-items:center;gap:10px"><div class="avatar" style="background:'+col+'22;color:'+col+'">'+ini(a.name.split(' ')[0],a.name.split(' ')[1])+'</div><div><div style="font-weight:500;font-size:14px">'+a.name+(a.first_visit?' <span class="badge badge-new">New</span>':'')+'</div><div style="font-size:12px;color:#64748b">'+a.phone+'</div></div></div><div style="text-align:right"><span class="badge badge-'+a.type+'">'+a.type+'</span><div style="font-size:11px;color:#94a3b8;margin-top:2px">'+(a.check_in_time||'')+'</div></div></div>';}).join('');
+}
+
+async function clearTodayCheckins(){
+  if(!confirm('Clear all check-ins for today?'))return;
+  await db.from('attendance').delete().eq('service_date',getSvcDate());
+  renderCheckinList();
+}
+
+// MEMBERS
+async function renderMembers(){
+  var srch=(document.getElementById('m-search').value||'').toLowerCase();
+  var filt=document.getElementById('m-type-filter').value||'';
+  var q=db.from('members').select('*').order('lname');
+  if(filt)q=q.eq('type',filt);
+  var r=await q;
+  var mems=(r.data||[]).filter(function(m){var n=(m.fname+' '+m.lname).toLowerCase();return(n.includes(srch)||m.phone.includes(srch));});
+  var tb=document.getElementById('m-tbody');
+  if(!mems.length){tb.innerHTML='<tr><td colspan="8" class="nd">No members found.</td></tr>';return;}
+  var ids=mems.map(function(m){return m.id;});
+  var ac2=await db.from('attendance').select('member_id').in('member_id',ids);
+  var cnts={};(ac2.data||[]).forEach(function(a){cnts[a.member_id]=(cnts[a.member_id]||0)+1;});
+  tb.innerHTML=mems.map(function(m){
+    var col=ac(m.id),visits=cnts[m.id]||0,soon=m.dob&&dtb(m.dob)<=30;
+    return'<tr><td><div class="member-cell"><div class="avatar" style="background:'+col+'22;color:'+col+'">'+ini(m.fname,m.lname)+'</div><div><div style="font-weight:500">'+m.fname+' '+m.lname+'</div><div style="font-size:11px;color:#64748b">'+(m.area||'')+'</div></div></div></td><td>'+m.phone+'</td><td>'+(m.dob?fds(m.dob):'-')+(soon?' <span class="badge badge-birthday">Soon</span>':'')+'</td><td style="font-size:12px">'+(m.marital_status||'-')+'</td><td><span class="badge badge-'+m.type+'">'+m.type+'</span></td><td style="font-size:12px">'+(m.cell_group||'-')+'</td><td>'+visits+'</td><td style="white-space:nowrap"><button class="btn-edit" onclick="openEdit(\''+m.id+'\')">Edit</button> <button class="btn btn-danger btn-sm" onclick="delMember(\''+m.id+'\')">Remove</button></td></tr>';
+  }).join('');
+}
+
+function openEdit(id){
+  db.from('members').select('*').eq('id',id).single().then(function(r){
+    var m=r.data;if(!m)return;
+    document.getElementById('ep-id').value=m.id;
+    document.getElementById('ep-name').textContent=m.fname+' '+m.lname;
+    document.getElementById('ep-fn').value=m.fname;
+    document.getElementById('ep-ln').value=m.lname;
+    document.getElementById('ep-ph').value=m.phone;
+    document.getElementById('ep-em').value=m.email||'';
+    document.getElementById('ep-gn').value=m.gender||'';
+    document.getElementById('ep-db').value=m.dob||'';
+    document.getElementById('ep-ms').value=m.marital_status||'';
+    document.getElementById('ep-ar').value=m.area||'';
+    document.getElementById('ep-cl').value=m.cell_group||'';
+    document.getElementById('ep-type').value=m.type;
+    document.getElementById('ep-oc').value=m.occupation||'';
+    document.getElementById('ep-nt').value=m.notes||'';
+    document.getElementById('edit-wrap').classList.remove('hidden');
+    document.getElementById('edit-wrap').scrollIntoView({behavior:'smooth',block:'start'});
+  });
+}
+
+function closeEdit(){document.getElementById('edit-wrap').classList.add('hidden');}
+
+async function saveEdit(){
+  var id=document.getElementById('ep-id').value;
+  var fn=document.getElementById('ep-fn').value.trim(),ln=document.getElementById('ep-ln').value.trim();
+  if(!fn||!ln){alert('Name cannot be empty.');return;}
+  var type=document.getElementById('ep-type').value;
+  await db.from('members').update({fname:fn,lname:ln,phone:document.getElementById('ep-ph').value.trim(),email:document.getElementById('ep-em').value.trim(),gender:document.getElementById('ep-gn').value,dob:document.getElementById('ep-db').value||null,marital_status:document.getElementById('ep-ms').value,area:document.getElementById('ep-ar').value.trim(),cell_group:document.getElementById('ep-cl').value.trim(),type:type,occupation:document.getElementById('ep-oc').value.trim(),notes:document.getElementById('ep-nt').value.trim()}).eq('id',id);
+  await db.from('attendance').update({name:fn+' '+ln,type:type}).eq('member_id',id);
+  closeEdit();renderMembers();alert(fn+' '+ln+' updated successfully!');
+}
+
+function delMember(id){
+  if(!confirm('Remove this person?'))return;
+  db.from('members').delete().eq('id',id).then(function(){db.from('attendance').delete().eq('member_id',id).then(function(){closeEdit();renderMembers();});});
+}
+
+async function addMember(){
+  var fn=document.getElementById('a-fn').value.trim(),ln=document.getElementById('a-ln').value.trim(),ph=document.getElementById('a-ph').value.trim();
+  if(!fn||!ln||!ph){alert('Please fill in name and phone number.');return;}
+  var r=await db.from('members').insert({fname:fn,lname:ln,phone:ph,email:document.getElementById('a-em').value.trim(),gender:document.getElementById('a-gn').value,dob:document.getElementById('a-db').value||null,marital_status:document.getElementById('a-ms').value,area:document.getElementById('a-ar').value.trim(),occupation:document.getElementById('a-oc').value.trim(),type:document.getElementById('a-type').value,cell_group:document.getElementById('a-cl').value.trim(),notes:document.getElementById('a-nt').value.trim(),joined:today});
+  if(r.error){alert('Error: '+r.error.message);return;}
+  ['a-fn','a-ln','a-ph','a-em','a-ar','a-oc','a-cl','a-nt','a-db'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('a-ms').value='';document.getElementById('a-gn').value='';document.getElementById('a-type').value='member';
+  showMTab('list');alert(fn+' '+ln+' added successfully!');
+}
+
+function showMTab(tab){
+  document.getElementById('mtab-list').classList.toggle('active',tab==='list');
+  document.getElementById('mtab-add').classList.toggle('active',tab==='add');
+  document.getElementById('m-list-tab').classList.toggle('hidden',tab!=='list');
+  document.getElementById('m-add-tab').classList.toggle('hidden',tab!=='add');
+  if(tab==='list'){closeEdit();renderMembers();}
+}
+
+async function exportMembers(){
+  var filterType=document.getElementById('m-type-filter').value||'all';
+  var label=filterType==='all'?'all':filterType==='member'?'members':'visitors';
+  if(filterType==='all'){
+    var choice=prompt('What would you like to export?\n\n1 = Members only\n2 = Visitors only\n3 = Both (Members + Visitors)\n\nType 1, 2 or 3:');
+    if(choice==='1')filterType='member';
+    else if(choice==='2')filterType='visitor';
+    else if(choice==='3')filterType='all';
+    else return;
+    label=filterType==='all'?'all':filterType==='member'?'members':'visitors';
+  }
+  var q=db.from('members').select('*').order('lname');
+  if(filterType!=='all')q=q.eq('type',filterType);
+  var r=await q;
+  if(!r.data||!r.data.length){alert('No '+label+' to export.');return;}
+  var rows=[['First Name','Last Name','Phone','Email','Gender','Date of Birth','Marital Status','Type','Cell Group','Area','Occupation','Joined','Notes']];
+  r.data.forEach(function(m){rows.push([m.fname,m.lname,m.phone,m.email||'',m.gender||'',m.dob||'',m.marital_status||'',m.type,m.cell_group||'',m.area||'',m.occupation||'',m.joined||'',m.notes||'']);});
+  var csv=rows.map(function(r){return r.map(function(c){return'"'+String(c).replace(/"/g,'""')+'"';}).join(',');}).join('\n');
+  var blob=new Blob([csv],{type:'text/csv'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='MAN_'+label+'.csv';document.body.appendChild(a);a.click();document.body.removeChild(a);
+}
+
+function downloadImportTemplate(){
+  var rows=[['First Name','Last Name','Phone','Email','Gender','Date of Birth','Marital Status','Type','Cell Group','Area','Occupation','Notes'],['Kwame','Asante','0244001001','','Male','1985-03-15','Married','member','Elders Board','East Legon','Teacher','']];
+  var ws=XLSX.utils.aoa_to_sheet(rows);var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Members');XLSX.writeFile(wb,'MAN_import_template.xlsx');
+}
+
+async function importMembers(){
+  var fileEl=document.getElementById('import-file');
+  var resultEl=document.getElementById('import-result');
+  if(!fileEl.files.length){resultEl.innerHTML='<div class="alert alert-error">Please select a file.</div>';return;}
+  resultEl.innerHTML='<div class="alert alert-info"><span class="spinner"></span> Reading file...</div>';
+  try{
+    var data=await fileEl.files[0].arrayBuffer();
+    var wb=XLSX.read(data,{type:'array',cellDates:true});
+    var rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{raw:false,dateNF:'yyyy-mm-dd'});
+    if(!rows.length){resultEl.innerHTML='<div class="alert alert-error">No data found.</div>';return;}
+    var imported=0,skipped=0;
+    for(var i=0;i<rows.length;i++){
+      var row=rows[i];
+      var fn=(row['First Name']||'').toString().trim(),ln=(row['Last Name']||'').toString().trim(),ph=(row['Phone']||'').toString().trim().replace(/\s+/g,'');
+      if(!fn||!ln||!ph){skipped++;continue;}
+      var dob=row['Date of Birth']||null;if(dob&&dob.length>10)dob=dob.slice(0,10);
+      var type=(row['Type']||'member').toString().toLowerCase().trim();
+      var r=await db.from('members').insert({fname:fn,lname:ln,phone:ph,email:(row['Email']||'').toString().trim(),gender:(row['Gender']||'').toString().trim(),dob:dob||null,marital_status:(row['Marital Status']||'').toString().trim(),type:['member','visitor'].includes(type)?type:'member',cell_group:(row['Cell Group']||'').toString().trim(),area:(row['Area']||'').toString().trim(),occupation:(row['Occupation']||'').toString().trim(),notes:(row['Notes']||'').toString().trim(),joined:today});
+      if(r.error)skipped++;else imported++;
+    }
+    resultEl.innerHTML='<div class="alert alert-success">Imported: <strong>'+imported+'</strong> | Skipped: <strong>'+skipped+'</strong></div>';
+    renderMembers();
+  }catch(e){resultEl.innerHTML='<div class="alert alert-error">Error: '+e.message+'</div>';}
+}
+
+// ATTENDANCE
+async function renderAttendance(){
+  var fd2=document.getElementById('att-filter').value;
+  var q=db.from('attendance').select('*').order('service_date',{ascending:false}).order('created_at',{ascending:false});
+  if(fd2)q=q.eq('service_date',fd2);
+  var r=await q.limit(300);
+  var tb=document.getElementById('att-tbody');
+  if(!r.data||!r.data.length){tb.innerHTML='<tr><td colspan="5" class="nd">No records found.</td></tr>';return;}
+  tb.innerHTML=r.data.map(function(a){return'<tr><td style="font-size:12px">'+fd(a.service_date)+'</td><td style="font-weight:500">'+a.name+(a.first_visit?' <span class="badge badge-new">New</span>':'')+'</td><td style="font-size:12px">'+a.phone+'</td><td><span class="badge badge-'+a.type+'">'+a.type+'</span></td><td style="font-size:12px;color:#64748b">'+(a.check_in_time||'')+'</td></tr>';}).join('');
+}
+
+async function exportCSV(){
+  var fd2=document.getElementById('att-filter').value;
+  var q=db.from('attendance').select('*').order('service_date',{ascending:false});
+  if(fd2)q=q.eq('service_date',fd2);
+  var r=await q;
+  if(!r.data||!r.data.length){alert('No attendance records to export.');return;}
+  var rows=[['Date','Name','Phone','Type','Time','First Visit']];
+  (r.data||[]).forEach(function(a){rows.push([a.service_date,a.name,a.phone,a.type,a.check_in_time||'',a.first_visit?'Yes':'No']);});
+  var csv=rows.map(function(r){return r.map(function(c){return'"'+String(c).replace(/"/g,'""')+'"';}).join(',');}).join('\n');
+  var blob=new Blob([csv],{type:'text/csv'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='MAN_attendance'+(fd2?'_'+fd2:'')+'.csv';document.body.appendChild(a);a.click();document.body.removeChild(a);
+}
+
+// BIRTHDAYS
+async function loadBirthdays(tab){
+  bdayTab=tab||bdayTab;
+  var r=await db.from('members').select('id,fname,lname,dob,phone,type').not('dob','is',null);
+  var mems=r.data||[];
+  if(bdayTab==='upcoming')mems=mems.filter(function(m){return dtb(m.dob)<=30;}).sort(function(a,b){return dtb(a.dob)-dtb(b.dob);});
+  else if(bdayTab==='thismonth'){var mo=new Date().getMonth();mems=mems.filter(function(m){return new Date(m.dob).getMonth()===mo;}).sort(function(a,b){return new Date(a.dob).getDate()-new Date(b.dob).getDate();});}
+  else mems.sort(function(a,b){var da=new Date(a.dob),db2=new Date(b.dob);return(da.getMonth()*100+da.getDate())-(db2.getMonth()*100+db2.getDate());});
+  var el=document.getElementById('bday-list');
+  if(!mems.length){el.innerHTML='<div class="nd">No birthdays found.</div>';return;}
+  el.innerHTML=mems.map(function(m){var days=dtb(m.dob),col=ac(m.id);var tag=days===0?'<span class="badge badge-birthday">Today!</span>':days<=7?'<span class="badge badge-birthday">In '+days+' days</span>':'<span style="font-size:12px;color:#64748b">In '+days+' days</span>';return'<div class="bday-row"><div style="display:flex;align-items:center;gap:10px"><div class="avatar" style="background:'+col+'22;color:'+col+'">'+ini(m.fname,m.lname)+'</div><div><div style="font-weight:500;font-size:14px">'+m.fname+' '+m.lname+'</div><div style="font-size:12px;color:#64748b">'+fbf(m.dob)+' - '+m.phone+'</div></div></div><div>'+tag+'</div></div>';}).join('');
+}
+
+// FOLLOW-UP
+function setFUMode(mode){
+  fuMode=mode;
+  document.getElementById('fumode-auto').classList.toggle('active',mode==='auto');
+  document.getElementById('fumode-manual').classList.toggle('active',mode==='manual');
+  document.getElementById('fu-date-picker').classList.toggle('hidden',mode!=='manual');
+  if(mode==='manual')loadRecordedSundays();
+  loadFollowups();
+}
+
+async function loadRecordedSundays(){
+  var r=await db.from('attendance').select('service_date').order('service_date',{ascending:false}).limit(500);
+  var dates=[...new Set((r.data||[]).map(function(a){return a.service_date;}))];
+  var sel=document.getElementById('fu-date-quick');
+  sel.innerHTML='<option value="">- Pick a recorded Sunday -</option>';
+  dates.forEach(function(d){sel.innerHTML+='<option value="'+d+'">'+fd(d)+'</option>';});
+  if(dates.length){document.getElementById('fu-date').value=dates[0];loadFollowups();}
+}
+
+async function getPendingFU(){
+  var dates=[];
+  if(fuMode==='manual'){
+    var d=document.getElementById('fu-date').value;
+    if(!d)return[];
+    dates=[d];
+  }else{
+    var r=await db.from('attendance').select('service_date').order('service_date',{ascending:false}).limit(500);
+    var allDates=[...new Set((r.data||[]).map(function(a){return a.service_date;}))];
+    if(allDates.length)dates=[allDates[0]];
+  }
+  if(!dates.length)return[];
+  var fuTypeFilter=document.getElementById('fu-type-filter')?document.getElementById('fu-type-filter').value:'all';
+  var membersQ=db.from('members').select('id,fname,lname,phone,cell_group,type');
+  if(fuTypeFilter!=='all')membersQ=membersQ.eq('type',fuTypeFilter);
+  var members=await membersQ;
+  var attended=await db.from('attendance').select('member_id,service_date').in('service_date',dates);
+  var fuData=await db.from('followups').select('*').in('missed_date',dates);
+  var attSet=new Set((attended.data||[]).map(function(a){return a.member_id+'_'+a.service_date;}));
+  var fuMap={};(fuData.data||[]).forEach(function(f){fuMap[f.member_id+'_'+f.missed_date]=f;});
+  var results=[];
+  (members.data||[]).forEach(function(m){dates.forEach(function(date){if(!attSet.has(m.id+'_'+date)){var fu=fuMap[m.id+'_'+date]||{};results.push({id:m.id,name:m.fname+' '+m.lname,phone:m.phone,cell:m.cell_group||'',type:m.type,missed_date:date,done:fu.done||false,note:fu.note||''});}});});
+  var totalAll=(members.data||[]).length;
+  var serviceDate=dates[0];
+  var attendedCount=(attended.data||[]).filter(function(a){return a.service_date===serviceDate;}).length;
+  var absentCount=results.filter(function(r){return r.missed_date===serviceDate;}).length;
+  var pendingCount=results.filter(function(r){return r.missed_date===serviceDate&&!r.done;}).length;
+  var filterLabel=fuTypeFilter==='all'?'Members + Visitors':fuTypeFilter==='member'?'Members':'Visitors';
+  document.getElementById('fu-summary').innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:1rem"><div class="stat-card"><div class="stat-num" style="font-size:22px;color:#0F6E56">'+attendedCount+'</div><div class="stat-label">Attended</div></div><div class="stat-card"><div class="stat-num" style="font-size:22px;color:#E24B4A">'+absentCount+'</div><div class="stat-label">Absent</div></div><div class="stat-card"><div class="stat-num" style="font-size:22px;color:#854F0B">'+pendingCount+'</div><div class="stat-label">Pending Follow-up</div></div><div class="stat-card"><div class="stat-num" style="font-size:22px">'+totalAll+'</div><div class="stat-label">'+filterLabel+'</div></div></div><p style="font-size:13px;color:#64748b">Absent <strong>'+filterLabel+'</strong> for: <strong>'+fd(serviceDate)+'</strong></p>';
+  return results;
+}
+
+async function loadFollowups(){
+  var all=await getPendingFU();
+  var items=fuTab==='pending'?all.filter(function(p){return!p.done;}):fuTab==='done'?all.filter(function(p){return p.done;}):all;
+  var el=document.getElementById('fu-list');
+  if(!items.length){el.innerHTML='<div class="nd">'+(fuTab==='pending'?'No pending follow-ups - all caught up!':fuTab==='done'?'No completed follow-ups yet.':'No missed services found.')+'</div>';return;}
+  el.innerHTML=items.map(function(p){var col=ac(p.id);return'<div class="fu-row"><div class="avatar" style="background:'+col+'22;color:'+col+'">'+ini(p.name.split(' ')[0],p.name.split(' ')[1])+'</div><div style="flex:1"><div style="font-weight:500;font-size:14px">'+p.name+' <span class="badge badge-'+p.type+'" style="font-size:10px">'+p.type+'</span></div><div style="font-size:12px;color:#64748b">'+p.phone+(p.cell?' - '+p.cell:'')+'</div><div style="font-size:12px;color:#E24B4A">Missed: '+fd(p.missed_date)+'</div>'+(p.note?'<div style="font-size:12px;color:#64748b;font-style:italic;margin-top:3px">Note: '+p.note+'</div>':'')+'</div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><label class="cw"><input type="checkbox" '+(p.done?'checked':'')+' onchange="toggleFU(\''+p.id+'\',\''+p.missed_date+'\',this)"> <span>'+(p.done?'<span class="badge badge-done">Done</span>':'<span class="badge badge-pending">Pending</span>')+'</span></label><button class="btn btn-secondary btn-sm" onclick="addFUNote(\''+p.id+'\',\''+p.missed_date+'\')">Add note</button></div></div>';}).join('');
+}
+
+async function toggleFU(memberId,missedDate,cb){
+  var done=cb.checked;
+  var ex=await db.from('followups').select('id').eq('member_id',memberId).eq('missed_date',missedDate).single();
+  if(ex.data)await db.from('followups').update({done:done,done_at:done?new Date().toISOString():null}).eq('id',ex.data.id);
+  else await db.from('followups').insert({member_id:memberId,missed_date:missedDate,done:done,done_at:done?new Date().toISOString():null});
+  loadFollowups();loadDashboard();
+}
+
+async function addFUNote(memberId,missedDate){
+  var note=prompt('Add a follow-up note:');
+  if(note===null)return;
+  var ex=await db.from('followups').select('id').eq('member_id',memberId).eq('missed_date',missedDate).single();
+  if(ex.data)await db.from('followups').update({note:note}).eq('id',ex.data.id);
+  else await db.from('followups').insert({member_id:memberId,missed_date:missedDate,note:note,done:false});
+  loadFollowups();
+}
+
+// REPORTS
+async function loadReports(){
+  var r=await db.from('attendance').select('service_date,type,first_visit').order('service_date',{ascending:false}).limit(1000);
+  var sun={};(r.data||[]).forEach(function(a){if(!sun[a.service_date])sun[a.service_date]={total:0,members:0,visitors:0,newV:0};sun[a.service_date].total++;if(a.type==='member')sun[a.service_date].members++;else sun[a.service_date].visitors++;if(a.first_visit)sun[a.service_date].newV++;});
+  var dates=Object.keys(sun).sort().reverse();
+  document.getElementById('r-table').innerHTML=dates.length?'<table><thead><tr><th>Date</th><th>Total</th><th>Members</th><th>Visitors</th><th>New Visitors</th></tr></thead><tbody>'+dates.map(function(d){return'<tr><td style="font-size:12px">'+fd(d)+'</td><td><strong>'+sun[d].total+'</strong></td><td>'+sun[d].members+'</td><td>'+sun[d].visitors+'</td><td>'+sun[d].newV+'</td></tr>';}).join('')+'</tbody></table>':'<div class="nd">No records yet.</div>';
+  var names={};(r.data||[]).forEach(function(a){if(!names[a.name])names[a.name]=0;names[a.name]++;});
+  var sorted=Object.entries(names).sort(function(a,b){return b[1]-a[1];}).slice(0,10);
+  var mx=sorted[0]?sorted[0][1]:1;
+  document.getElementById('r-top').innerHTML=sorted.length?sorted.map(function(x){return'<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:13px">'+x[0]+'</span><span style="font-size:13px;font-weight:600">'+x[1]+' visits</span></div><div class="pb"><div class="pf" style="width:'+Math.round(x[1]/mx*100)+'%"></div></div></div>';}).join(''):'<div class="nd">No data yet.</div>';
+}
+
+// SMS
+function updateCharCount(){var msg=document.getElementById('sms-message').value;document.getElementById('sms-chars').textContent=msg.length;var prev=document.getElementById('sms-preview');if(msg.trim()){prev.style.display='block';document.getElementById('sms-preview-text').textContent=msg;}else prev.style.display='none';}
+async function updateSMSCount(){var group=document.getElementById('sms-group').value;var q=db.from('members').select('id',{count:'exact',head:true});if(group!=='all')q=q.eq('type',group);var r=await q;document.getElementById('sms-recipient-count').textContent='Will be sent to '+(r.count||0)+' '+(group==='all'?'people':group+'s');}
+async function checkBalance(){try{var res=await fetch('/api/sms',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'balance'})});var data=await res.json();document.getElementById('sms-balance').textContent=data.balance||data.data||'-';}catch(e){document.getElementById('sms-balance').textContent='Error';}}
+async function sendSMS(){
+  var message=document.getElementById('sms-message').value.trim();
+  var group=document.getElementById('sms-group').value;
+  var resultEl=document.getElementById('sms-result');
+  var btnEl=document.getElementById('sms-send-btn');
+  if(!message){resultEl.innerHTML='<div class="alert alert-error">Please type a message first.</div>';return;}
+  if(!confirm('Send this SMS to all '+(group==='all'?'members and visitors':group+'s')+'?\n\n"'+message+'"'))return;
+  btnEl.innerHTML='<span class="spinner"></span> Sending...';btnEl.disabled=true;resultEl.innerHTML='';
+  var q=db.from('members').select('phone,fname,lname');if(group!=='all')q=q.eq('type',group);
+  var r=await q;
+  if(!r.data||!r.data.length){resultEl.innerHTML='<div class="alert alert-error">No recipients found.</div>';btnEl.innerHTML='Send SMS';btnEl.disabled=false;return;}
+  var sent=0,failed=0;
+  for(var i=0;i<r.data.length;i++){
+    try{var res=await fetch('/api/sms',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'send',phone:r.data[i].phone,message:message})});var d=await res.json();if(d.status==='success'||d.code==='ok'||res.ok)sent++;else failed++;}catch(e){failed++;}
+  }
+  smsHistory.unshift({date:new Date().toLocaleString('en-GH'),group:group,message:message,sent:sent,failed:failed,total:r.data.length});
+  renderSMSHistory();
+  resultEl.innerHTML='<div class="alert '+(failed===0?'alert-success':'alert-error')+'">Sent: <strong>'+sent+'</strong> | Failed: <strong>'+failed+'</strong> | Total: <strong>'+r.data.length+'</strong></div>';
+  document.getElementById('sms-message').value='';document.getElementById('sms-chars').textContent='0';document.getElementById('sms-preview').style.display='none';
+  btnEl.innerHTML='Send SMS';btnEl.disabled=false;checkBalance();
+}
+function renderSMSHistory(){var el=document.getElementById('sms-history');if(!smsHistory.length){el.innerHTML='<div class="nd">No messages sent yet.</div>';return;}el.innerHTML=smsHistory.map(function(h){return'<div style="padding:10px 0;border-bottom:1px solid #f8fafc"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;font-weight:600;color:#475569">'+(h.group==='all'?'Everyone':h.group+'s')+'</span><span style="font-size:11px;color:#94a3b8">'+h.date+'</span></div><div style="font-size:13px;color:#1e293b;margin-bottom:4px">"'+h.message+'"</div><div style="font-size:12px;color:#64748b">Sent: '+h.sent+' - Failed: '+h.failed+'</div></div>';}).join('');}
+var quickMessages={reminder:'Dear beloved, this is a reminder that Sunday service at Mighty Army Network is tomorrow. We look forward to worshipping with you. God bless you!',birthday:'Happy Birthday from all of us at Mighty Army Network! May God bless you abundantly on your special day and always.',welcome:'Welcome to the Mighty Army Network family! We are so glad you joined us. God has great plans for you. See you Sunday!',missed:'We missed you at Mighty Army Network last Sunday! You are always in our prayers. We look forward to seeing you this coming Sunday. God bless you!'};
+function setQuickMsg(type){document.getElementById('sms-message').value=quickMessages[type];updateCharCount();}
+
+// EVENTS
+function showEventsListView(){document.getElementById('events-list-view').classList.remove('hidden');document.getElementById('event-form-view').classList.add('hidden');document.getElementById('event-detail-view').classList.add('hidden');loadEvents();}
+function showEventForm(event){
+  document.getElementById('events-list-view').classList.add('hidden');
+  document.getElementById('event-form-view').classList.remove('hidden');
+  document.getElementById('event-detail-view').classList.add('hidden');
+  if(event){document.getElementById('event-form-title').textContent='Edit Event';document.getElementById('ef-id').value=event.id;document.getElementById('ef-name').value=event.name;document.getElementById('ef-date').value=event.event_date;document.getElementById('ef-venue').value=event.venue||'';document.getElementById('ef-time').value=event.event_time||'';document.getElementById('ef-desc').value=event.description||'';}
+  else{document.getElementById('event-form-title').textContent='Create New Event';document.getElementById('ef-id').value='';['ef-name','ef-venue','ef-desc'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('ef-date').value='';document.getElementById('ef-time').value='';}
+}
+async function loadEvents(){
+  var r=await db.from('events').select('*').order('event_date',{ascending:false});
+  var el=document.getElementById('events-grid');
+  if(!r.data||!r.data.length){el.innerHTML='<div class="nd" style="padding:3rem;background:white;border-radius:12px">No events yet. Click <strong>Create New Event</strong> to get started.</div>';return;}
+  var regs=await db.from('event_registrations').select('event_id');
+  var counts={};(regs.data||[]).forEach(function(r){counts[r.event_id]=(counts[r.event_id]||0)+1;});
+  el.innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem">'+r.data.map(function(ev){var isPast=ev.event_date<today;return'<div class="card" style="border:1.5px solid #e2e8f0"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px"><div style="font-size:16px;font-weight:700;color:#1a3a5c">'+ev.name+'</div><span style="font-size:11px;padding:3px 8px;border-radius:20px;background:'+(isPast?'#f1f5f9':'#E1F5EE')+';color:'+(isPast?'#64748b':'#085041')+';font-weight:600">'+(isPast?'Past':'Upcoming')+'</span></div><div style="font-size:13px;color:#64748b;margin-bottom:4px">'+fd(ev.event_date)+(ev.event_time?' - '+ftime(ev.event_time):'')+'</div>'+(ev.venue?'<div style="font-size:13px;color:#64748b;margin-bottom:8px">'+ev.venue+'</div>':'')+'<div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:14px;font-weight:600;color:#1a3a5c">'+(counts[ev.id]||0)+' registered</div><button class="btn btn-primary btn-sm" onclick="openEventDetail(\''+ev.id+'\')">View</button></div></div>';}).join('')+'</div>';
+}
+async function saveEvent(){
+  var name=document.getElementById('ef-name').value.trim(),date=document.getElementById('ef-date').value;
+  if(!name||!date){alert('Please enter event name and date.');return;}
+  var id=document.getElementById('ef-id').value;
+  var payload={name:name,event_date:date,venue:document.getElementById('ef-venue').value.trim(),event_time:document.getElementById('ef-time').value||null,description:document.getElementById('ef-desc').value.trim()};
+  if(id)await db.from('events').update(payload).eq('id',id);
+  else await db.from('events').insert(payload);
+  showEventsListView();
+}
+async function openEventDetail(eventId){
+  currentEventId=eventId;
+  document.getElementById('events-list-view').classList.add('hidden');
+  document.getElementById('event-form-view').classList.add('hidden');
+  document.getElementById('event-detail-view').classList.remove('hidden');
+  document.getElementById('event-import-wrap').classList.add('hidden');
+  document.getElementById('event-manual-wrap').classList.add('hidden');
+  var ev=await db.from('events').select('*').eq('id',eventId).single();
+  var e=ev.data;
+  var regUrl=EVENT_REG_URL+'?event='+eventId;
+  document.getElementById('event-detail-header').innerHTML='<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px"><div><div style="font-size:20px;font-weight:700;color:#1a3a5c;margin-bottom:6px">'+e.name+'</div><div style="font-size:13px;color:#64748b">'+fd(e.event_date)+(e.event_time?' - '+ftime(e.event_time):'')+'</div>'+(e.venue?'<div style="font-size:13px;color:#64748b">'+e.venue+'</div>':'')+(e.description?'<div style="font-size:13px;color:#64748b;margin-top:4px">'+e.description+'</div>':'')+'</div><button class="btn btn-danger btn-sm" onclick="deleteEvent(\''+eventId+'\')">Delete Event</button></div><div style="margin-top:1rem;padding:12px;background:#f8fafc;border-radius:8px;border:1px dashed #cbd5e1"><div style="font-size:12px;font-weight:600;color:#475569;margin-bottom:6px;text-transform:uppercase">Registration Link - share to register</div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><input type="text" value="'+regUrl+'" readonly onclick="this.select()" style="font-size:12px;flex:1;min-width:200px;cursor:pointer"><button class="btn btn-primary btn-sm" onclick="copyLink(\''+regUrl+'\')">Copy Link</button><button class="btn btn-secondary btn-sm" onclick="genQR(\''+regUrl+'\')">QR Code</button></div></div>';
+  loadEventRegistrations(eventId);
+}
+async function loadEventRegistrations(eventId){
+  var r=await db.from('event_registrations').select('*').eq('event_id',eventId).order('created_at',{ascending:false});
+  var regs=r.data||[];
+  document.getElementById('event-stats').innerHTML='<div class="stat-card"><div class="stat-num" style="font-size:24px">'+regs.length+'</div><div class="stat-label">Total Registered</div></div><div class="stat-card"><div class="stat-num" style="font-size:24px">'+regs.filter(function(r){return r.gender==='Male';}).length+'</div><div class="stat-label">Male</div></div><div class="stat-card"><div class="stat-num" style="font-size:24px">'+regs.filter(function(r){return r.gender==='Female';}).length+'</div><div class="stat-label">Female</div></div><div class="stat-card"><div class="stat-num" style="font-size:24px">'+regs.filter(function(r){return r.is_member;}).length+'</div><div class="stat-label">Church Members</div></div>';
+  var el=document.getElementById('event-reg-list');
+  if(!regs.length){el.innerHTML='<div class="nd">No registrations yet.</div>';return;}
+  el.innerHTML='<table><thead><tr><th>#</th><th>Name</th><th>Phone</th><th>Email</th><th>Gender</th><th>Type</th><th>Date Registered</th><th>Checked In</th></tr></thead><tbody>'+regs.map(function(r,i){return'<tr><td style="color:#94a3b8">'+(i+1)+'</td><td style="font-weight:500">'+r.fname+' '+r.lname+'</td><td>'+r.phone+'</td><td style="font-size:12px">'+(r.email||'-')+'</td><td>'+(r.gender||'-')+'</td><td><span class="badge badge-'+(r.is_member?'member':'visitor')+'">'+(r.is_member?'Member':'Guest')+'</span></td><td style="font-size:12px;color:#64748b">'+new Date(r.created_at).toLocaleDateString('en-GH')+'</td><td><input type="checkbox" '+(r.checked_in?'checked':'')+' style="width:16px;height:16px;accent-color:#0F6E56;cursor:pointer" onchange="toggleEventCheckin(\''+r.id+'\',this)"> '+(r.checked_in?'<span class="badge badge-done">Yes</span>':'<span style="font-size:12px;color:#94a3b8">No</span>')+'</td></tr>';}).join('')+'</tbody></table>';
+}
+async function lookupEventReg(){
+  var phone=document.getElementById('er-phone').value.trim().replace(/\s+/g,'');
+  var res=document.getElementById('er-lookup-result');
+  if(!phone){res.innerHTML='<div class="alert alert-error">Please enter a phone number.</div>';return;}
+  var existing=await db.from('event_registrations').select('id,fname,lname').eq('event_id',currentEventId).eq('phone',phone).single();
+  if(existing.data){res.innerHTML='<div class="alert alert-info">'+existing.data.fname+' '+existing.data.lname+' is already registered.</div>';return;}
+  var member=await db.from('members').select('*').eq('phone',phone).single();
+  if(member.data){
+    var m=member.data;
+    res.innerHTML='<div class="member-found"><div style="font-weight:700;color:#085041;margin-bottom:4px">Found: '+m.fname+' '+m.lname+'</div><div style="font-size:13px;color:#0F6E56">'+m.phone+'</div><button class="btn btn-success btn-sm" style="margin-top:10px" onclick="regMemberForEvent(\''+m.id+'\',\''+m.fname+'\',\''+m.lname+'\',\''+m.phone+'\',\''+(m.email||'')+'\',\''+(m.gender||'')+'\')">Register for this Event</button></div>';
+    document.getElementById('er-new-form').classList.add('hidden');
+  }else{
+    res.innerHTML='<div class="alert alert-info">New person - please fill in details below.</div>';
+    ['er-fn','er-ln','er-em'].forEach(function(id){document.getElementById(id).value='';});
+    document.getElementById('er-gn').value='';
+    document.getElementById('er-new-form').classList.remove('hidden');
+  }
+}
+async function regMemberForEvent(memberId,fname,lname,phone,email,gender){
+  var r=await db.from('event_registrations').insert({event_id:currentEventId,member_id:memberId,fname:fname,lname:lname,phone:phone,email:email,gender:gender,is_member:true});
+  if(r.error){alert('Error: '+r.error.message);return;}
+  document.getElementById('er-lookup-result').innerHTML='<div class="alert alert-success">'+fname+' '+lname+' registered!</div>';
+  document.getElementById('er-phone').value='';
+  loadEventRegistrations(currentEventId);
+}
+async function registerNewPersonForEvent(){
+  var fn=document.getElementById('er-fn').value.trim(),ln=document.getElementById('er-ln').value.trim(),ph=document.getElementById('er-phone').value.trim();
+  if(!fn||!ln){alert('Please enter first and last name.');return;}
+  var r=await db.from('event_registrations').insert({event_id:currentEventId,fname:fn,lname:ln,phone:ph,email:document.getElementById('er-em').value.trim(),gender:document.getElementById('er-gn').value,is_member:false});
+  if(r.error){alert('Error: '+r.error.message);return;}
+  document.getElementById('er-lookup-result').innerHTML='<div class="alert alert-success">'+fn+' '+ln+' registered!</div>';
+  document.getElementById('er-new-form').classList.add('hidden');
+  document.getElementById('er-phone').value='';
+  loadEventRegistrations(currentEventId);
+}
+async function importEventRegistrations(){
+  var fileEl=document.getElementById('event-import-file');
+  var resultEl=document.getElementById('event-import-result');
+  if(!fileEl.files.length){resultEl.innerHTML='<div class="alert alert-error">Please select a file.</div>';return;}
+  resultEl.innerHTML='<div class="alert alert-info"><span class="spinner"></span> Reading...</div>';
+  try{
+    var data=await fileEl.files[0].arrayBuffer();
+    var wb=XLSX.read(data,{type:'array'});
+    var rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{raw:false});
+    var imported=0,skipped=0;
+    for(var i=0;i<rows.length;i++){
+      var row=rows[i];
+      var fn=(row['First Name']||'').toString().trim(),ln=(row['Last Name']||'').toString().trim(),ph=(row['Phone']||'').toString().trim().replace(/\s+/g,'');
+      if(!fn||!ln||!ph){skipped++;continue;}
+      var member=await db.from('members').select('id').eq('phone',ph).single();
+      var r=await db.from('event_registrations').insert({event_id:currentEventId,member_id:member.data?member.data.id:null,fname:fn,lname:ln,phone:ph,email:(row['Email']||'').toString().trim(),gender:(row['Gender']||'').toString().trim(),is_member:!!member.data});
+      if(r.error)skipped++;else imported++;
+    }
+    resultEl.innerHTML='<div class="alert alert-success">Imported: '+imported+' | Skipped: '+skipped+'</div>';
+    loadEventRegistrations(currentEventId);
+  }catch(e){resultEl.innerHTML='<div class="alert alert-error">Error: '+e.message+'</div>';}
+}
+function downloadEventTemplate(){var rows=[['First Name','Last Name','Phone','Email','Gender'],['Kwame','Asante','0244001001','','Male']];var ws=XLSX.utils.aoa_to_sheet(rows);var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Registrations');XLSX.writeFile(wb,'event_template.xlsx');}
+async function exportEventRegistrations(){
+  var r=await db.from('event_registrations').select('*').eq('event_id',currentEventId).order('created_at');
+  var ev=await db.from('events').select('name').eq('id',currentEventId).single();
+  if(!r.data||!r.data.length){alert('No registrations to export.');return;}
+  var rows=[['#','First Name','Last Name','Phone','Email','Gender','Type','Date']];
+  r.data.forEach(function(reg,i){rows.push([i+1,reg.fname,reg.lname,reg.phone,reg.email||'',reg.gender||'',reg.is_member?'Member':'Guest',new Date(reg.created_at).toLocaleDateString('en-GH')]);});
+  var ws=XLSX.utils.aoa_to_sheet(rows);var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Registrations');XLSX.writeFile(wb,(ev.data?ev.data.name:'event')+'_registrations.xlsx');
+}
+async function deleteEvent(eventId){
+  if(!confirm('Delete this event and all registrations?'))return;
+  await db.from('event_registrations').delete().eq('event_id',eventId);
+  await db.from('events').delete().eq('id',eventId);
+  showEventsListView();
+}
+async function sendEventSMS(){
+  var message=document.getElementById('event-sms-msg').value.trim();
+  var resultEl=document.getElementById('event-sms-result');
+  if(!message){resultEl.textContent='Please type a message.';return;}
+  var r=await db.from('event_registrations').select('phone,fname').eq('event_id',currentEventId);
+  if(!r.data||!r.data.length){resultEl.textContent='No registrants found.';return;}
+  if(!confirm('Send SMS to all '+r.data.length+' registrants?'))return;
+  resultEl.innerHTML='<span class="spinner"></span> Sending...';
+  var sent=0,failed=0;
+  for(var i=0;i<r.data.length;i++){
+    try{var res=await fetch('/api/sms',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'send',phone:r.data[i].phone,message:message})});var d=await res.json();if(d.status==='success'||d.code==='ok'||res.ok)sent++;else failed++;}catch(e){failed++;}
+  }
+  resultEl.innerHTML='Sent: '+sent+' - Failed: '+failed;
+  document.getElementById('event-sms-msg').value='';
+}
+function copyLink(url){navigator.clipboard.writeText(url).then(function(){alert('Link copied! Share via WhatsApp:\n\n'+url);}).catch(function(){alert('Copy this link:\n\n'+url);});}
+function genQR(url){showPage('qrcode');document.getElementById('qr-url-input').value=url;generateQR();}
+
+async function toggleEventCheckin(regId,cb){
+  await db.from('event_registrations').update({checked_in:cb.checked,checked_in_at:cb.checked?new Date().toISOString():null}).eq('id',regId);
+  loadEventRegistrations(currentEventId);
+}
+
+async function exportEventRegistrations(){
+  var r=await db.from('event_registrations').select('*').eq('event_id',currentEventId).order('created_at');
+  var ev=await db.from('events').select('name').eq('id',currentEventId).single();
+  if(!r.data||!r.data.length){alert('No registrations to export.');return;}
+  var rows=[['#','First Name','Last Name','Phone','Email','Gender','Type','Date Registered','Checked In']];
+  r.data.forEach(function(reg,i){rows.push([i+1,reg.fname,reg.lname,reg.phone,reg.email||'',reg.gender||'',reg.is_member?'Member':'Guest',new Date(reg.created_at).toLocaleDateString('en-GH'),reg.checked_in?'Yes':'No']);});
+  var ws=XLSX.utils.aoa_to_sheet(rows);var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Registrations');XLSX.writeFile(wb,(ev.data?ev.data.name:'event')+'_registered.xlsx');
+}
+
+async function exportEventCheckins(){
+  var r=await db.from('event_registrations').select('*').eq('event_id',currentEventId).eq('checked_in',true).order('checked_in_at');
+  var ev=await db.from('events').select('name').eq('id',currentEventId).single();
+  if(!r.data||!r.data.length){alert('No check-ins to export.');return;}
+  var rows=[['#','First Name','Last Name','Phone','Email','Gender','Type','Checked In At']];
+  r.data.forEach(function(reg,i){rows.push([i+1,reg.fname,reg.lname,reg.phone,reg.email||'',reg.gender||'',reg.is_member?'Member':'Guest',reg.checked_in_at?new Date(reg.checked_in_at).toLocaleString('en-GH'):'']);});
+  var ws=XLSX.utils.aoa_to_sheet(rows);var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Checked In');XLSX.writeFile(wb,(ev.data?ev.data.name:'event')+'_checkins.xlsx');
+}
+
+// ---- CHILDREN'S MINISTRY ----
+var cTab='list';
+function showCTab(tab){
+  cTab=tab;
+  ['list','add','attendance'].forEach(function(t){
+    document.getElementById('ctab-'+t).classList.toggle('active',t===tab);
+    document.getElementById('c-'+t+'-tab').classList.toggle('hidden',t!==tab);
+  });
+  if(tab==='list')renderChildren();
+  if(tab==='attendance'){document.getElementById('c-att-date').value=today;loadChildrenAttendance();}
+}
+
+function getAgeGroup(dob){
+  if(!dob)return'Unknown';
+  var age=Math.floor((new Date()-new Date(dob))/864e5/365.25);
+  if(age<=3)return'0-3';
+  if(age<=7)return'4-7';
+  if(age<=12)return'8-12';
+  return'13+';
+}
+
+function getAgeGroupLabel(dob){
+  var g=getAgeGroup(dob);
+  return g==='0-3'?'0-3 years':g==='4-7'?'4-7 years':g==='8-12'?'8-12 years':g==='13+'?'13+ years':'Unknown';
+}
+
+async function renderChildren(){
+  var srch=(document.getElementById('c-search').value||'').toLowerCase();
+  var ageFilt=document.getElementById('c-age-filter').value||'';
+  var r=await db.from('children').select('*').order('lname');
+  var kids=(r.data||[]).filter(function(c){
+    var n=(c.fname+' '+c.lname).toLowerCase();
+    var matchSearch=n.includes(srch);
+    var matchAge=!ageFilt||getAgeGroup(c.dob)===ageFilt;
+    return matchSearch&&matchAge;
+  });
+  var tb=document.getElementById('c-tbody');
+  if(!kids.length){tb.innerHTML='<tr><td colspan="7" class="nd">No children found.</td></tr>';return;}
+  tb.innerHTML=kids.map(function(c){
+    var col=ac(c.id);
+    return'<tr><td><div class="member-cell"><div class="avatar" style="background:'+col+'22;color:'+col+'">'+ini(c.fname,c.lname)+'</div><div><div style="font-weight:500">'+c.fname+' '+c.lname+'</div></div></div></td><td><span class="badge" style="background:#E6F1FB;color:#0C447C">'+getAgeGroupLabel(c.dob)+'</span></td><td style="font-size:13px">'+(c.dob||'-')+'</td><td>'+(c.gender||'-')+'</td><td style="font-size:13px">'+(c.guardian_name||'-')+'</td><td style="font-size:13px">'+(c.guardian_phone||'-')+'</td><td style="white-space:nowrap"><button class="btn-edit" onclick="openChildEdit(\''+c.id+'\')">Edit</button> <button class="btn btn-danger btn-sm" onclick="deleteChild(\''+c.id+'\')">Remove</button></td></tr>';
+  }).join('');
+}
+
+function openChildEdit(id){
+  db.from('children').select('*').eq('id',id).single().then(function(r){
+    var c=r.data;if(!c)return;
+    document.getElementById('cep-id').value=c.id;
+    document.getElementById('cep-name').textContent=c.fname+' '+c.lname;
+    document.getElementById('cep-fn').value=c.fname;
+    document.getElementById('cep-ln').value=c.lname;
+    document.getElementById('cep-dob').value=c.dob||'';
+    document.getElementById('cep-gn').value=c.gender||'';
+    document.getElementById('cep-par').value=c.guardian_name||'';
+    document.getElementById('cep-parph').value=c.guardian_phone||'';
+    document.getElementById('cep-nt').value=c.notes||'';
+    document.getElementById('c-edit-wrap').classList.remove('hidden');
+    document.getElementById('c-edit-wrap').scrollIntoView({behavior:'smooth',block:'start'});
+  });
+}
+
+async function saveChildEdit(){
+  var id=document.getElementById('cep-id').value;
+  var fn=document.getElementById('cep-fn').value.trim(),ln=document.getElementById('cep-ln').value.trim();
+  if(!fn||!ln){alert('Name cannot be empty.');return;}
+  await db.from('children').update({fname:fn,lname:ln,dob:document.getElementById('cep-dob').value||null,gender:document.getElementById('cep-gn').value,guardian_name:document.getElementById('cep-par').value.trim(),guardian_phone:document.getElementById('cep-parph').value.trim(),notes:document.getElementById('cep-nt').value.trim()}).eq('id',id);
+  document.getElementById('c-edit-wrap').classList.add('hidden');
+  renderChildren();alert(fn+' '+ln+' updated!');
+}
+
+async function deleteChild(id){
+  if(!confirm('Remove this child?'))return;
+  await db.from('children').delete().eq('id',id);
+  renderChildren();
+}
+
+async function searchParentMember(){
+  var phone=document.getElementById('ca-par-search').value.trim().replace(/\s+/g,'');
+  var res=document.getElementById('ca-par-result');
+  if(!phone){res.innerHTML='<div class="alert alert-error">Enter a phone number.</div>';return;}
+  var r=await db.from('members').select('id,fname,lname,phone').eq('phone',phone).single();
+  if(r.data){
+    var m=r.data;
+    res.innerHTML='<div class="alert alert-success">Found: <strong>'+m.fname+' '+m.lname+'</strong> ('+m.phone+')</div>';
+    document.getElementById('ca-par-id').value=m.id;
+    document.getElementById('ca-par').value=m.fname+' '+m.lname;
+    document.getElementById('ca-parph').value=m.phone;
+  }else{
+    res.innerHTML='<div class="alert alert-info">Not found in members. Enter details manually below.</div>';
+    document.getElementById('ca-par-id').value='';
+  }
+}
+
+async function addChild(){
+  var fn=document.getElementById('ca-fn').value.trim(),ln=document.getElementById('ca-ln').value.trim();
+  var dob=document.getElementById('ca-dob').value;
+  var parName=document.getElementById('ca-par').value.trim();
+  var parPhone=document.getElementById('ca-parph').value.trim();
+  if(!fn||!ln||!dob){alert('Please enter first name, last name and date of birth.');return;}
+  if(!parName||!parPhone){alert('Please enter parent/guardian name and phone.');return;}
+  var r=await db.from('children').insert({fname:fn,lname:ln,dob:dob,gender:document.getElementById('ca-gn').value,guardian_name:parName,guardian_phone:parPhone,guardian_member_id:document.getElementById('ca-par-id').value||null,notes:document.getElementById('ca-nt').value.trim()});
+  if(r.error){alert('Error: '+r.error.message);return;}
+  ['ca-fn','ca-ln','ca-dob','ca-par','ca-parph','ca-par-search','ca-nt'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('ca-gn').value='';document.getElementById('ca-par-id').value='';
+  document.getElementById('ca-par-result').innerHTML='';
+  showCTab('list');alert(fn+' '+ln+' added successfully!');
+}
+
+async function loadChildrenAttendance(){
+  var date=document.getElementById('c-att-date').value||today;
+  var r=await db.from('children').select('*').order('lname');
+  var kids=r.data||[];
+  var attR=await db.from('children_attendance').select('child_id').eq('service_date',date);
+  var present=new Set((attR.data||[]).map(function(a){return a.child_id;}));
+  var groups={'0-3':[],'4-7':[],'8-12':[],'13+':[]};
+  kids.forEach(function(c){var g=getAgeGroup(c.dob);if(groups[g])groups[g].push(c);});
+  var el=document.getElementById('c-att-list');
+  if(!kids.length){el.innerHTML='<div class="nd">No children registered yet.</div>';return;}
+  var html='';
+  Object.keys(groups).forEach(function(g){
+    if(!groups[g].length)return;
+    html+='<div style="margin-bottom:1.25rem"><div style="font-size:13px;font-weight:600;color:#1a3a5c;padding:8px 12px;background:#f8fafc;border-radius:6px;margin-bottom:8px">'+g+' years ('+groups[g].length+' children)</div>';
+    groups[g].forEach(function(c){
+      var col=ac(c.id);var isPresent=present.has(c.id);
+      html+='<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid #f8fafc"><div style="display:flex;align-items:center;gap:10px"><div class="avatar" style="background:'+col+'22;color:'+col+'">'+ini(c.fname,c.lname)+'</div><div><div style="font-weight:500;font-size:14px">'+c.fname+' '+c.lname+'</div><div style="font-size:12px;color:#64748b">'+(c.guardian_name||'')+(c.guardian_phone?' - '+c.guardian_phone:'')+'</div></div></div><label class="cw"><input type="checkbox" '+(isPresent?'checked':'')+' style="width:16px;height:16px;accent-color:#0F6E56" onchange="toggleChildAtt(\''+c.id+'\',\''+date+'\',this)"> <span style="font-size:13px">'+(isPresent?'<span class="badge badge-done">Present</span>':'<span class="badge badge-pending">Absent</span>')+'</span></label></div>';
+    });
+    html+='</div>';
+  });
+  el.innerHTML=html;
+  loadChildrenAttHistory(date);
+}
+
+async function toggleChildAtt(childId,date,cb){
+  if(cb.checked){
+    await db.from('children_attendance').upsert({child_id:childId,service_date:date,created_at:new Date().toISOString()},{onConflict:'child_id,service_date'});
+  }else{
+    await db.from('children_attendance').delete().eq('child_id',childId).eq('service_date',date);
+  }
+  loadChildrenAttendance();
+}
+
+async function loadChildrenAttHistory(date){
+  var r=await db.from('children_attendance').select('*,children(fname,lname,dob)').eq('service_date',date||today);
+  var el=document.getElementById('c-att-history');
+  var recs=r.data||[];
+  if(!recs.length){el.innerHTML='<div class="nd">No attendance recorded for this date.</div>';return;}
+  el.innerHTML='<p style="font-size:13px;color:#64748b;margin-bottom:10px"><strong>'+recs.length+'</strong> children present on '+fd(date||today)+'</p><div style="display:flex;flex-wrap:wrap;gap:8px">'+recs.map(function(a){var c=a.children||{};var col=ac(a.child_id);return'<div style="display:flex;align-items:center;gap:6px;background:#f8fafc;border-radius:8px;padding:6px 10px;font-size:13px"><div class="avatar" style="width:24px;height:24px;font-size:10px;background:'+col+'22;color:'+col+'">'+ini(c.fname,c.lname)+'</div>'+c.fname+' '+c.lname+'</div>';}).join('')+'</div>';
+}
+
+async function exportChildrenAttendance(){
+  var date=document.getElementById('c-att-date').value||today;
+  var r=await db.from('children_attendance').select('*,children(fname,lname,dob,gender,guardian_name,guardian_phone)').eq('service_date',date);
+  if(!r.data||!r.data.length){alert('No attendance to export.');return;}
+  var rows=[['First Name','Last Name','Age Group','Gender','Guardian','Guardian Phone','Date']];
+  r.data.forEach(function(a){var c=a.children||{};rows.push([c.fname||'',c.lname||'',getAgeGroupLabel(c.dob),c.gender||'',c.guardian_name||'',c.guardian_phone||'',date]);});
+  var ws=XLSX.utils.aoa_to_sheet(rows);var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Children Attendance');XLSX.writeFile(wb,'children_attendance_'+date+'.xlsx');
+}
+
+async function exportChildrenList(){
+  var ageFilt=document.getElementById('c-age-filter').value||'';
+  var q=db.from('children').select('*').order('lname');
+  var r=await q;
+  var kids=(r.data||[]);
+  if(ageFilt)kids=kids.filter(function(c){return getAgeGroup(c.dob)===ageFilt;});
+  if(!kids.length){alert('No children to export.');return;}
+  var rows=[['First Name','Last Name','Date of Birth','Age Group','Gender','Guardian Name','Guardian Phone','Notes']];
+  kids.forEach(function(c){rows.push([c.fname,c.lname,c.dob||'',getAgeGroupLabel(c.dob),c.gender||'',c.guardian_name||'',c.guardian_phone||'',c.notes||'']);});
+  var ws=XLSX.utils.aoa_to_sheet(rows);var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Children');XLSX.writeFile(wb,'MAN_children.xlsx');
+}
+function generateQR(){
+  var url=document.getElementById('qr-url-input').value.trim();
+  var out=document.getElementById('qr-output');
+  if(!url){out.style.display='none';return;}
+  out.style.display='flex';
+  document.getElementById('qr-url-display').textContent=url;
+  var container=document.getElementById('qr-canvas');
+  container.innerHTML='';
+  qrInstance=new QRCode(container,{text:url,width:220,height:220,colorDark:'#1a3a5c',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});
+}
+function downloadQR(){
+  var container=document.getElementById('qr-canvas');
+  var canvas=container.querySelector('canvas');
+  var img=container.querySelector('img');
+  var src=canvas?canvas.toDataURL('image/png'):img?img.src:null;
+  if(!src){alert('Please enter a URL first.');return;}
+  var a=document.createElement('a');a.href=src;a.download='MAN_qr.png';document.body.appendChild(a);a.click();document.body.removeChild(a);
+}
+function printQR(){
+  var container=document.getElementById('qr-canvas');
+  var canvas=container.querySelector('canvas');
+  var img=container.querySelector('img');
+  var src=canvas?canvas.toDataURL():img?img.src:'';
+  var url=document.getElementById('qr-url-display').textContent;
+  var win=window.open('','_blank');
+  win.document.write('<html><body style="text-align:center;font-family:sans-serif;padding:2rem"><h2 style="color:#1a3a5c">Mighty Army Network</h2><p style="color:#64748b;margin-bottom:1.5rem">Scan to register</p><img src="'+src+'" style="width:220px"><p style="font-size:12px;color:#94a3b8;margin-top:1rem">'+url+'</p></body></html>');
+  win.print();
+}
+</script>
+</body>
+</html>
