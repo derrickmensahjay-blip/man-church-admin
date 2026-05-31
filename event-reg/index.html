@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mighty Army Network — Event</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f4f8;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:1.5rem 1rem}
+.logo{text-align:center;margin-bottom:1.5rem}
+.logo .cross{font-size:40px}
+.logo h1{font-size:22px;font-weight:700;color:#1a3a5c;margin-top:6px}
+.card{background:white;border-radius:16px;padding:1.5rem;width:100%;max-width:420px;box-shadow:0 4px 24px rgba(0,0,0,0.08);margin-bottom:1rem}
+.event-banner{background:#1a3a5c;color:white;border-radius:12px;padding:1.25rem;width:100%;max-width:420px;margin-bottom:1rem;text-align:center}
+.event-banner h2{font-size:18px;font-weight:700;margin-bottom:6px}
+.event-banner p{font-size:13px;opacity:.8}
+.mode-badge{display:inline-block;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:700;margin-bottom:1rem}
+.mode-reg{background:#E1F5EE;color:#085041}
+.mode-ci{background:#E6F1FB;color:#042C53}
+h2{font-size:17px;font-weight:600;color:#1a3a5c;margin-bottom:6px}
+.sub{font-size:13px;color:#64748b;margin-bottom:1.25rem;line-height:1.5}
+.form-group{margin-bottom:14px}
+label{display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em}
+input,select{width:100%;padding:12px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:15px;color:#1e293b;background:#f8fafc;transition:border .15s}
+input:focus,select:focus{outline:none;border-color:#1a3a5c;background:white}
+.btn{width:100%;padding:14px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;border:none;transition:all .15s;margin-top:6px}
+.btn-primary{background:#1a3a5c;color:white}.btn-primary:hover{background:#142e4a}
+.btn-success{background:#0F6E56;color:white}
+.btn-secondary{background:#f1f5f9;color:#475569;margin-top:10px}
+.alert{padding:12px 16px;border-radius:10px;font-size:14px;margin-bottom:1rem;line-height:1.5}
+.alert-success{background:#E1F5EE;color:#085041;border:1px solid #5DCAA5}
+.alert-error{background:#FCEBEB;color:#501313;border:1px solid #F09595}
+.alert-info{background:#E6F1FB;color:#042C53;border:1px solid #85B7EB}
+.found-card{background:#E1F5EE;border:1px solid #5DCAA5;border-radius:12px;padding:1rem;margin-bottom:1rem}
+.found-name{font-size:18px;font-weight:700;color:#085041;margin-bottom:4px}
+.found-meta{font-size:13px;color:#0F6E56}
+.step{display:none}.step.active{display:block}
+.success-big{text-align:center;padding:1rem 0}
+.success-icon{font-size:56px;margin-bottom:12px}
+.success-name{font-size:22px;font-weight:700;color:#085041;margin-bottom:6px}
+.success-msg{font-size:14px;color:#0F6E56;margin-bottom:1.25rem}
+.spinner{display:inline-block;width:20px;height:20px;border:2px solid #e2e8f0;border-top-color:#1a3a5c;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.divider{border:none;border-top:1.5px solid #f1f5f9;margin:1.25rem 0}
+</style>
+</head>
+<body>
+
+<div class="logo">
+  <div class="cross">&#9962;</div>
+  <h1>Mighty Army Network</h1>
+</div>
+
+<div id="event-banner" style="display:none"></div>
+
+<div class="card">
+  <div id="loading" style="text-align:center;padding:2rem;color:#64748b"><span class="spinner"></span> Loading...</div>
+
+  <!-- STEP 1: Phone -->
+  <div class="step" id="step-phone">
+    <div id="mode-badge-wrap"></div>
+    <h2 id="step-phone-title">Enter your phone number</h2>
+    <p class="sub" id="step-phone-sub"></p>
+    <div class="form-group"><label>Phone Number</label><input type="tel" id="phone-input" placeholder="e.g. 0244123456" maxlength="15" inputmode="tel"></div>
+    <div id="phone-error"></div>
+    <button class="btn btn-primary" id="lookup-btn">Continue &rarr;</button>
+  </div>
+
+  <!-- STEP 2a: Found - register or check-in -->
+  <div class="step" id="step-found">
+    <h2 id="found-title">Welcome back!</h2>
+    <div id="found-card"></div>
+    <button class="btn btn-success" id="action-btn">Continue</button>
+    <button class="btn btn-secondary" id="found-back-btn">&larr; Use different number</button>
+  </div>
+
+  <!-- STEP 2b: New person form -->
+  <div class="step" id="step-register">
+    <h2 id="reg-title">Register below</h2>
+    <p class="sub">Please fill in your details.</p>
+    <div class="divider"></div>
+    <div class="form-group"><label>First Name *</label><input type="text" id="r-fname" placeholder="Your first name"></div>
+    <div class="form-group"><label>Last Name *</label><input type="text" id="r-lname" placeholder="Your last name"></div>
+    <div class="form-group"><label>Phone Number</label><input type="tel" id="r-phone" readonly style="background:#f1f5f9;color:#64748b"></div>
+    <div class="form-group"><label>Email Address</label><input type="email" id="r-email" placeholder="Optional"></div>
+    <div class="form-group"><label>Gender</label><select id="r-gender"><option value="">Select...</option><option>Male</option><option>Female</option></select></div>
+    <div id="register-error"></div>
+    <button class="btn btn-success" id="register-btn">Register &amp; Check In &#10003;</button>
+    <button class="btn btn-secondary" id="reg-back-btn">&larr; Use different number</button>
+  </div>
+
+  <!-- STEP 3: Success -->
+  <div class="step" id="step-success">
+    <div class="success-big">
+      <div class="success-icon" id="success-icon">&#127881;</div>
+      <div class="success-name" id="success-name"></div>
+      <div class="success-msg" id="success-msg"></div>
+      <div class="alert alert-success" id="success-detail"></div>
+      <button class="btn btn-secondary" id="success-restart-btn" style="margin-top:0">Go back</button>
+    </div>
+  </div>
+
+  <!-- NO EVENT -->
+  <div class="step" id="step-no-event">
+    <div style="text-align:center;padding:2rem 0">
+      <div style="font-size:48px;margin-bottom:1rem">&#128533;</div>
+      <div style="font-size:16px;font-weight:600;color:#1a3a5c;margin-bottom:8px">Event not found</div>
+      <div style="font-size:13px;color:#64748b">This event link may be invalid or the event has been removed.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+var SUPABASE_URL='https://ljejpmvlbtipgasxwhnk.supabase.co';
+var SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxqZWpwbXZsYnRpcGdhc3h3aG5rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNzAzMzcsImV4cCI6MjA5Mzg0NjMzN30.taXJcYdZfJ6fZJ6BztSznBSVjJVhDbYxohzRuGOzCow';
+
+var db=null;
+var currentEvent=null;
+var currentPhone='';
+var currentMember=null;
+var currentReg=null;
+var isCheckinMode=false;
+var today=new Date().toISOString().split('T')[0];
+
+function getEventId(){return new URLSearchParams(window.location.search).get('event');}
+function showStep(id){document.querySelectorAll('.step').forEach(function(s){s.classList.remove('active');});document.getElementById(id).classList.add('active');}
+function fd(d){if(!d)return'';return new Date(d+'T00:00:00').toLocaleDateString('en-GH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});}
+function ftime(t){if(!t)return'';var p=t.split(':');var h=parseInt(p[0]);return(h>12?h-12:h)+':'+(p[1]||'00')+' '+(h>=12?'PM':'AM');}
+
+window.addEventListener('load',function(){
+  var sc=window.supabase;
+  if(!sc){setTimeout(function(){window.location.reload();},1000);return;}
+  db=sc.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+  init();
+  document.getElementById('lookup-btn').addEventListener('click',lookupPhone);
+  document.getElementById('phone-input').addEventListener('keydown',function(e){if(e.key==='Enter')lookupPhone();});
+  document.getElementById('action-btn').addEventListener('click',doAction);
+  document.getElementById('found-back-btn').addEventListener('click',goBack);
+  document.getElementById('register-btn').addEventListener('click',registerAndAction);
+  document.getElementById('reg-back-btn').addEventListener('click',goBack);
+  document.getElementById('success-restart-btn').addEventListener('click',resetForm);
+});
+
+async function init(){
+  var eventId=getEventId();
+  if(!eventId){document.getElementById('loading').style.display='none';showStep('step-no-event');return;}
+  var r=await db.from('events').select('*').eq('id',eventId).single();
+  document.getElementById('loading').style.display='none';
+  if(!r.data){showStep('step-no-event');return;}
+  currentEvent=r.data;
+  isCheckinMode=(currentEvent.event_date===today);
+  var banner=document.getElementById('event-banner');
+  banner.style.display='block';
+  banner.innerHTML='<h2>&#127881; '+currentEvent.name+'</h2><p>&#128197; '+fd(currentEvent.event_date)+(currentEvent.event_time?' &nbsp;&middot;&nbsp; &#128336; '+ftime(currentEvent.event_time):'')+(currentEvent.venue?'<br>&#128205; '+currentEvent.venue:'')+'</p>';
+  document.title=currentEvent.name+' — Mighty Army Network';
+  var modeHtml=isCheckinMode?'<div class="mode-badge mode-ci">&#9989; Check-in Mode — Event is Today!</div>':'<div class="mode-badge mode-reg">&#128221; Registration Mode</div>';
+  document.getElementById('mode-badge-wrap').innerHTML=modeHtml;
+  if(isCheckinMode){
+    document.getElementById('step-phone-title').textContent='Check in for this event';
+    document.getElementById('step-phone-sub').textContent='Enter your phone number to check in.';
+  }else{
+    document.getElementById('step-phone-title').textContent='Register for this event';
+    document.getElementById('step-phone-sub').textContent='Enter your phone number to register.';
+  }
+  showStep('step-phone');
+}
+
+function goBack(){currentPhone='';currentMember=null;currentReg=null;document.getElementById('phone-input').value='';document.getElementById('phone-error').innerHTML='';showStep('step-phone');}
+
+function resetForm(){
+  goBack();
+  ['r-fname','r-lname','r-email'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('r-gender').value='';
+}
+
+async function lookupPhone(){
+  var phone=document.getElementById('phone-input').value.trim().replace(/\s+/g,'');
+  var errEl=document.getElementById('phone-error');
+  if(!phone||phone.length<8){errEl.innerHTML='<div class="alert alert-error">Please enter a valid phone number.</div>';return;}
+  errEl.innerHTML='';
+  currentPhone=phone;
+  document.getElementById('lookup-btn').innerHTML='<span class="spinner"></span> Checking...';
+  try{
+    // Check existing registration
+    var regR=await db.from('event_registrations').select('*').eq('event_id',currentEvent.id).eq('phone',phone).single();
+    currentReg=regR.data||null;
+
+    if(isCheckinMode){
+      // Check-in mode
+      if(currentReg&&currentReg.checked_in){
+        errEl.innerHTML='<div class="alert alert-success">&#9989; You are already checked in for this event!</div>';
+        document.getElementById('lookup-btn').innerHTML='Continue &rarr;';return;
+      }
+      if(currentReg){
+        // Registered, not yet checked in
+        var foundCard=document.getElementById('found-card');
+        foundCard.innerHTML='<div class="found-card"><div class="found-name">'+currentReg.fname+' '+currentReg.lname+'</div><div class="found-meta">&#128222; '+currentReg.phone+' &nbsp;&middot;&nbsp; Registered &#10003;</div></div>';
+        document.getElementById('found-title').textContent='Welcome! Check in below &#9989;';
+        document.getElementById('action-btn').textContent='&#9989; Check In Now';
+        showStep('step-found');
+      }else{
+        // Not registered — allow register + check-in on the day
+        var memberR=await db.from('members').select('*').eq('phone',phone).single();
+        if(memberR.data){
+          currentMember=memberR.data;
+          var fc=document.getElementById('found-card');
+          fc.innerHTML='<div class="found-card"><div class="found-name">'+memberR.data.fname+' '+memberR.data.lname+'</div><div class="found-meta">&#128222; '+memberR.data.phone+'</div><div class="found-meta" style="margin-top:4px;color:#854F0B">Not yet registered — will register &amp; check in</div></div>';
+          document.getElementById('found-title').textContent='Register &amp; Check In';
+          document.getElementById('action-btn').textContent='&#127881; Register &amp; Check In';
+          showStep('step-found');
+        }else{
+          document.getElementById('r-phone').value=phone;
+          ['r-fname','r-lname','r-email'].forEach(function(id){document.getElementById(id).value='';});
+          document.getElementById('r-gender').value='';
+          document.getElementById('reg-title').textContent='Register &amp; Check In';
+          showStep('step-register');
+        }
+      }
+    }else{
+      // Registration mode
+      if(currentReg){
+        errEl.innerHTML='<div class="alert alert-success">&#9989; You are already registered for this event!</div>';
+        document.getElementById('lookup-btn').innerHTML='Continue &rarr;';return;
+      }
+      var memberR2=await db.from('members').select('*').eq('phone',phone).single();
+      if(memberR2.data){
+        currentMember=memberR2.data;
+        var fc2=document.getElementById('found-card');
+        fc2.innerHTML='<div class="found-card"><div class="found-name">'+memberR2.data.fname+' '+memberR2.data.lname+'</div><div class="found-meta">&#128222; '+memberR2.data.phone+'</div></div>';
+        document.getElementById('found-title').textContent='Welcome back! &#128591;';
+        document.getElementById('action-btn').textContent='&#9989; Register for this Event';
+        showStep('step-found');
+      }else{
+        document.getElementById('r-phone').value=phone;
+        ['r-fname','r-lname','r-email'].forEach(function(id){document.getElementById(id).value='';});
+        document.getElementById('r-gender').value='';
+        document.getElementById('reg-title').textContent='First time here? Welcome!';
+        showStep('step-register');
+      }
+    }
+  }catch(e){errEl.innerHTML='<div class="alert alert-error">Connection error. Please try again.</div>';}
+  document.getElementById('lookup-btn').innerHTML='Continue &rarr;';
+}
+
+async function doAction(){
+  document.getElementById('action-btn').innerHTML='<span class="spinner"></span> Processing...';
+  try{
+    if(isCheckinMode){
+      if(currentReg){
+        // Already registered, just check in
+        await db.from('event_registrations').update({checked_in:true,checked_in_at:new Date().toISOString()}).eq('id',currentReg.id);
+        showSuccess('&#9989;',currentReg.fname+'!','You are now checked in!','Checked in for '+currentEvent.name+' on '+fd(today));
+      }else if(currentMember){
+        // Register + check in on the day
+        await db.from('event_registrations').insert({event_id:currentEvent.id,member_id:currentMember.id,fname:currentMember.fname,lname:currentMember.lname,phone:currentMember.phone,email:currentMember.email||'',gender:currentMember.gender||'',is_member:true,checked_in:true,checked_in_at:new Date().toISOString()});
+        showSuccess('&#9989;',currentMember.fname+'!','You are registered and checked in!','Checked in for '+currentEvent.name+' on '+fd(today));
+      }
+    }else{
+      // Registration mode
+      await db.from('event_registrations').insert({event_id:currentEvent.id,member_id:currentMember.id,fname:currentMember.fname,lname:currentMember.lname,phone:currentMember.phone,email:currentMember.email||'',gender:currentMember.gender||'',is_member:true,checked_in:false});
+      showSuccess('&#127881;',currentMember.fname+'!','You are registered for this event.','&#128197; '+fd(currentEvent.event_date)+(currentEvent.venue?' &nbsp;&middot;&nbsp; &#128205; '+currentEvent.venue:''));
+    }
+  }catch(e){alert('Error: '+e.message);}
+  document.getElementById('action-btn').innerHTML='Continue';
+}
+
+async function registerAndAction(){
+  var fname=document.getElementById('r-fname').value.trim(),lname=document.getElementById('r-lname').value.trim();
+  var errEl=document.getElementById('register-error');
+  if(!fname||!lname){errEl.innerHTML='<div class="alert alert-error">Please enter your first and last name.</div>';return;}
+  errEl.innerHTML='';
+  document.getElementById('register-btn').innerHTML='<span class="spinner"></span> Processing...';
+  try{
+    var checkin=isCheckinMode;
+    await db.from('event_registrations').insert({event_id:currentEvent.id,fname:fname,lname:lname,phone:currentPhone,email:document.getElementById('r-email').value.trim(),gender:document.getElementById('r-gender').value,is_member:false,checked_in:checkin,checked_in_at:checkin?new Date().toISOString():null});
+    if(checkin){showSuccess('&#9989;',fname+'!','You are registered and checked in!','Checked in for '+currentEvent.name+' on '+fd(today));}
+    else{showSuccess('&#127881;',fname+'!','You are registered for this event.','&#128197; '+fd(currentEvent.event_date)+(currentEvent.venue?' &nbsp;&middot;&nbsp; &#128205; '+currentEvent.venue:''));}
+  }catch(e){errEl.innerHTML='<div class="alert alert-error">Error. Please try again.</div>';}
+  document.getElementById('register-btn').innerHTML='Register &amp; Check In &#10003;';
+}
+
+function showSuccess(icon,name,msg,detail){
+  document.getElementById('success-icon').innerHTML=icon;
+  document.getElementById('success-name').textContent=name;
+  document.getElementById('success-msg').textContent=msg;
+  document.getElementById('success-detail').innerHTML=detail;
+  showStep('step-success');
+}
+</script>
+</body>
+</html>
