@@ -1,41 +1,14 @@
-var CACHE_NAME = 'man-admin-v1';
-var urlsToCache = [
-  '/man-church-admin/',
-  '/man-church-admin/index.html',
-  '/man-church-admin/manifest.json',
-  '/man-church-admin/icons/icon-192x192.png',
-  '/man-church-admin/icons/icon-512x512.png'
-];
-
-self.addEventListener('install', function(event) {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(function(cache) {
-      return cache.addAll(urlsToCache);
-    })
-  );
+const CACHE_NAME = 'man-admin-v1';
+const ASSETS = ['./', './index.html', './manifest.json'];
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(ASSETS)));
   self.skipWaiting();
 });
-
-self.addEventListener('activate', function(event) {
-  event.waitUntil(
-    caches.keys().then(function(cacheNames) {
-      return Promise.all(
-        cacheNames.filter(function(name) {
-          return name !== CACHE_NAME;
-        }).map(function(name) {
-          return caches.delete(name);
-        })
-      );
-    })
-  );
+self.addEventListener('activate', e => {
+  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))));
   self.clients.claim();
 });
-
-self.addEventListener('fetch', function(event) {
-  // Network first strategy - always try network, fall back to cache
-  event.respondWith(
-    fetch(event.request).catch(function() {
-      return caches.match(event.request);
-    })
-  );
+self.addEventListener('fetch', e => {
+  if(e.request.method !== 'GET') return;
+  e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
 });
