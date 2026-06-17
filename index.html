@@ -695,8 +695,8 @@ label{display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4
 </div>
 
 <script>
-var SUPABASE_URL='https://ljejpmvlbtipgasxwhnk.supabase.co';
-var SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxqZWpwbXZsYnRpcGdhc3h3aG5rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNzAzMzcsImV4cCI6MjA5Mzg0NjMzN30.taXJcYdZfJ6fZJ6BztSznBSVjJVhDbYxohzRuGOzCow';
+var CHURCH_SUPABASE_URL='https://ljejpmvlbtipgasxwhnk.supabase.co';
+var CHURCH_SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxqZWpwbXZsYnRpcGdhc3h3aG5rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNzAzMzcsImV4cCI6MjA5Mzg0NjMzN30.taXJcYdZfJ6fZJ6BztSznBSVjJVhDbYxohzRuGOzCow';
 var ARKESEL_API_KEY='YkNhT3htZHNuTG9mdHJwVElXU3U';
 var ARKESEL_SENDER='PS. DERRICK';
 var ADMIN_PASSWORD='MAN2025';
@@ -752,7 +752,7 @@ function initApp(){
   function tryInit(){
     attempts++;
     if(window.supabase&&window.supabase.createClient){
-      db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+      db=window.supabase.createClient(CHURCH_SUPABASE_URL,CHURCH_SUPABASE_ANON_KEY);
       document.getElementById('svc-date').value=today;
       bindNavEvents();
       bindAllEvents();
@@ -1731,12 +1731,12 @@ function installPWA(){
 
 <script>
 // =============================================
-// SUPABASE CONFIG — Replace with your credentials
+// SUPABASE CONFIG — Finance System
 // =============================================
-const SUPABASE_URL = 'https://fixtjkfghcexffdxiisz.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZpeHRqa2ZnaGNleGZmZHhpaXN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NDM0MDksImV4cCI6MjA5NjAxOTQwOX0.-WrENj-GixEqeBKMg7q8_sgAsriJgJS46wHy9EaNSV0';
+const FIN_SUPABASE_URL = 'https://fixtjkfghcexffdxiisz.supabase.co';
+const FIN_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZpeHRqa2ZnaGNleGZmZHhpaXN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NDM0MDksImV4cCI6MjA5NjAxOTQwOX0.-WrENj-GixEqeBKMg7q8_sgAsriJgJS46wHy9EaNSV0';
 const { createClient } = supabase;
-const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+const finDb = createClient(FIN_SUPABASE_URL, FIN_SUPABASE_KEY);
 
 // Email notifications disabled — using in-app notifications only
 const NETLIFY_EMAIL_URL = '';
@@ -4360,8 +4360,6 @@ window.addEventListener('load', function(){
 // ---- FINANCE JS ----
 (function(){
   var createClient = supabase.createClient;
-  var FIN_URL = 'https://fixtjkfghcexffdxiisz.supabase.co';
-  var FIN_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZpeHRqa2ZnaGNleGZmZHhpaXN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NDM0MDksImV4cCI6MjA5NjAxOTQwOX0.-WrENj-GixEqeBKMg7q8_sgAsriJgJS46wHy9EaNSV0';
   
 // =============================================
 // SUPABASE CONFIG — Replace with your credentials
@@ -4384,7 +4382,7 @@ async function sendEmailToMany(recipients, subject, message) {
 }
 
 async function createNotification(userId, title, message, type) {
-  await db.from('notifications').insert({ user_id: userId, title, message, type, is_read: false });
+  await finDb.from('notifications').insert({ user_id: userId, title, message, type, is_read: false });
 }
 
 async function notifyUser(userId, title, message, type, email, name) {
@@ -4394,7 +4392,7 @@ async function notifyUser(userId, title, message, type, email, name) {
 
 async function loadNotifications() {
   if (!currentUser) return;
-  const { data } = await db.from('notifications').select('*').eq('user_id', currentUser.id).order('created_at', {ascending:false}).limit(20);
+  const { data } = await finDb.from('notifications').select('*').eq('user_id', currentUser.id).order('created_at', {ascending:false}).limit(20);
   const unread = (data||[]).filter(n => !n.is_read);
   const count = unread.length;
 
@@ -4423,12 +4421,12 @@ async function loadNotifications() {
 }
 
 async function markNotifRead(id) {
-  await db.from('notifications').update({ is_read: true }).eq('id', id);
+  await finDb.from('notifications').update({ is_read: true }).eq('id', id);
   loadNotifications();
 }
 
 async function markAllNotifRead() {
-  await db.from('notifications').update({ is_read: true }).eq('user_id', currentUser.id);
+  await finDb.from('notifications').update({ is_read: true }).eq('user_id', currentUser.id);
   loadNotifications();
 }
 
@@ -4507,7 +4505,7 @@ async function doLogin() {
   errEl.style.display = 'none';
   if (!username || !password) { errEl.textContent = 'Please enter username and password'; errEl.style.display = 'block'; return; }
   try {
-    const { data, error } = await db.from('users').select('*').eq('username', username).eq('password', password).eq('is_active', true).single();
+    const { data, error } = await finDb.from('users').select('*').eq('username', username).eq('password', password).eq('is_active', true).single();
     if (error || !data) { errEl.textContent = 'Invalid username or password'; errEl.style.display = 'block'; return; }
     currentUser = data;
     await initApp();
@@ -4543,12 +4541,12 @@ async function initApp() {
 // Recalculate all pot balances from actual records
 async function recalculatePotBalances() {
   const [{ data: income }, { data: welfare_d }, { data: sw }, { data: transfers }, { data: requests }, { data: pledgePayments }] = await Promise.all([
-    db.from('income_records').select('tithe_amount,savings_amount,operational_amount,womens_ministry_amount,youth_ministry_amount,children_ministry_amount,welfare_amount'),
-    db.from('welfare_disbursements').select('amount'),
-    db.from('savings_withdrawals').select('amount'),
-    db.from('fund_transfers').select('from_fund,to_fund,amount'),
-    db.from('fund_requests').select('fund_source,amount_requested,amount_returned,status'),
-    db.from('pledge_payments').select('amount')
+    finDb.from('income_records').select('tithe_amount,savings_amount,operational_amount,womens_ministry_amount,youth_ministry_amount,children_ministry_amount,welfare_amount'),
+    finDb.from('welfare_disbursements').select('amount'),
+    finDb.from('savings_withdrawals').select('amount'),
+    finDb.from('fund_transfers').select('from_fund,to_fund,amount'),
+    finDb.from('fund_requests').select('fund_source,amount_requested,amount_returned,status'),
+    finDb.from('pledge_payments').select('amount')
   ]);
 
   const pots = { tithe:0, savings:0, operational:0, womens_ministry:0, youth_ministry:0, children_ministry:0, welfare:0 };
@@ -4591,7 +4589,7 @@ async function recalculatePotBalances() {
 
   // Update all pots
   await Promise.all(Object.entries(pots).map(([name, balance]) =>
-    db.from('fund_pots').update({ balance: Math.max(0, Math.round(balance * 100) / 100), updated_at: new Date().toISOString() }).eq('name', name)
+    finDb.from('fund_pots').update({ balance: Math.max(0, Math.round(balance * 100) / 100), updated_at: new Date().toISOString() }).eq('name', name)
   ));
 
   await loadGlobalData();
@@ -4599,9 +4597,9 @@ async function recalculatePotBalances() {
 
 async function loadGlobalData() {
   const [{ data: pots }, { data: settings }, { data: users }] = await Promise.all([
-    db.from('fund_pots').select('*'),
-    db.from('settings').select('*'),
-    db.from('users').select('id, name, username, role, department, is_active, email')
+    finDb.from('fund_pots').select('*'),
+    finDb.from('settings').select('*'),
+    finDb.from('users').select('id, name, username, role, department, is_active, email')
   ]);
   if (pots) pots.forEach(p => appData.pots[p.name] = p);
   if (settings) settings.forEach(s => appData.settings[s.key] = s.value);
@@ -4673,7 +4671,7 @@ function today() { return new Date().toISOString().split('T')[0]; }
 function uid() { return Date.now().toString(36).toUpperCase(); }
 
 async function logAudit(action, entityType, entityId, details) {
-  await db.from('audit_log').insert({ action, entity_type: entityType, entity_id: entityId, performed_by: currentUser.id, details });
+  await finDb.from('audit_log').insert({ action, entity_type: entityType, entity_id: entityId, performed_by: currentUser.id, details });
 }
 
 // =============================================
@@ -4754,10 +4752,10 @@ async function loadDashboard() {
   // Month summary
   const now = new Date();
   const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-  const { data: monthIncome } = await db.from('income_records').select('*').gte('service_date', firstDay);
+  const { data: monthIncome } = await finDb.from('income_records').select('*').gte('service_date', firstDay);
   const totalIn = (monthIncome||[]).reduce((s,r) => s + parseFloat(r.total_amount||0), 0);
   const totalTithe = (monthIncome||[]).reduce((s,r) => s + parseFloat(r.tithe_amount||0), 0);
-  const { data: monthExp } = await db.from('fund_requests').select('amount_spent').eq('status','reconciled').gte('reconciled_at', firstDay+'T00:00:00');
+  const { data: monthExp } = await finDb.from('fund_requests').select('amount_spent').eq('status','reconciled').gte('reconciled_at', firstDay+'T00:00:00');
   const totalExp = (monthExp||[]).reduce((s,r) => s + parseFloat(r.amount_spent||0), 0);
   document.getElementById('month-summary').innerHTML = `
     <div class="calc-row"><span>Total Income Received</span><span class="amt text-green">${fmt(totalIn)}</span></div>
@@ -4767,7 +4765,7 @@ async function loadDashboard() {
   `;
 
   // Pending requests
-  const { data: pending } = await db.from('fund_requests').select('*').eq('status','pending').order('created_at',{ascending:false}).limit(5);
+  const { data: pending } = await finDb.from('fund_requests').select('*').eq('status','pending').order('created_at',{ascending:false}).limit(5);
   if (!pending || !pending.length) {
     document.getElementById('pending-requests-dash').innerHTML = '<div class="empty-state"><p>No pending requests</p></div>';
   } else {
@@ -4783,7 +4781,7 @@ async function loadDashboard() {
   }
 
   // Recent transactions
-  const { data: recent } = await db.from('income_records').select('*').order('created_at',{ascending:false}).limit(8);
+  const { data: recent } = await finDb.from('income_records').select('*').order('created_at',{ascending:false}).limit(8);
   if (!recent || !recent.length) {
     document.getElementById('recent-transactions').innerHTML = '<div class="empty-state"><p>No transactions recorded yet</p></div>';
   } else {
@@ -4817,8 +4815,8 @@ async function loadMinistryDashboard() {
   const pot = appData.pots[potKey];
   const now = new Date();
   const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-  const { data: myReqs } = await db.from('fund_requests').select('*').eq('requested_by', currentUser.id).order('created_at',{ascending:false}).limit(10);
-  const { data: monthIncome } = await db.from('income_records').select('*').gte('service_date', firstDay);
+  const { data: myReqs } = await finDb.from('fund_requests').select('*').eq('requested_by', currentUser.id).order('created_at',{ascending:false}).limit(10);
+  const { data: monthIncome } = await finDb.from('income_records').select('*').gte('service_date', firstDay);
   const incomeField = potKey + '_amount';
   const monthAmt = (monthIncome||[]).reduce((s,r)=>s+parseFloat(r[incomeField]||0),0);
 
@@ -4857,7 +4855,7 @@ async function loadDeptDashboard() {
   const filterMonth = document.getElementById('dept-dash-month')?.value || '';
   const filterYear = document.getElementById('dept-dash-year')?.value || '';
 
-  let query = db.from('fund_requests').select('*').eq('requested_by', currentUser.id);
+  let query = finDb.from('fund_requests').select('*').eq('requested_by', currentUser.id);
   if (filterMonth && filterYear) {
     const fm = `${filterYear}-${filterMonth.padStart(2,'0')}-01`;
     const lm = new Date(parseInt(filterYear), parseInt(filterMonth), 0).toISOString().split('T')[0];
@@ -4923,7 +4921,7 @@ async function loadDeptDashboard() {
 }
 
 async function loadDeptBudgets() {
-  const { data } = await db.from('dept_budgets').select('*').eq('department', currentUser.department).order('year',{ascending:false}).order('quarter',{ascending:false});
+  const { data } = await finDb.from('dept_budgets').select('*').eq('department', currentUser.department).order('year',{ascending:false}).order('quarter',{ascending:false});
   return data||[];
 }
 
@@ -4956,7 +4954,7 @@ async function saveQuarterlyBudget() {
   const amount = parseFloat(document.getElementById('bq-amount').value||0);
   const notes = document.getElementById('bq-notes').value;
   if (!year || amount <= 0) { document.getElementById('bq-msg').innerHTML = '<div class="alert alert-error">Year and amount required</div>'; return; }
-  const { error } = await db.from('dept_budgets').insert({ department: currentUser.department, submitted_by: currentUser.id, year: parseInt(year), quarter, total_amount: amount, notes, status: 'pending' });
+  const { error } = await finDb.from('dept_budgets').insert({ department: currentUser.department, submitted_by: currentUser.id, year: parseInt(year), quarter, total_amount: amount, notes, status: 'pending' });
   if (error) { document.getElementById('bq-msg').innerHTML = `<div class="alert alert-error">${error.message}</div>`; return; }
   closeModal('submit-budget');
   loadDeptDashboard();
@@ -5155,7 +5153,7 @@ async function saveIncome() {
   const total = type === 'welfare' ? welfare : combined + welfare + ministryOfferingAmt;
 
   try {
-    const { data: rec, error } = await db.from('income_records').insert({
+    const { data: rec, error } = await finDb.from('income_records').insert({
       service_date: date, service_type: type, total_amount: total,
       tithe_amount: tithe, savings_amount: savings, operational_amount: operational,
       womens_ministry_amount: womens_amt, welfare_amount: welfare_amt,
@@ -5186,13 +5184,13 @@ async function saveIncome() {
 
 async function incrementPot(potName, amount) {
   const current = parseFloat(appData.pots[potName]?.balance || 0);
-  await db.from('fund_pots').update({ balance: current + amount, updated_at: new Date().toISOString() }).eq('name', potName);
+  await finDb.from('fund_pots').update({ balance: current + amount, updated_at: new Date().toISOString() }).eq('name', potName);
 }
 
 async function decrementPot(potName, amount) {
   const current = parseFloat(appData.pots[potName]?.balance || 0);
   const newBal = Math.max(0, current - amount);
-  await db.from('fund_pots').update({ balance: newBal, updated_at: new Date().toISOString() }).eq('name', potName);
+  await finDb.from('fund_pots').update({ balance: newBal, updated_at: new Date().toISOString() }).eq('name', potName);
 }
 
 function clearIncomeForm() {
@@ -5203,7 +5201,7 @@ function clearIncomeForm() {
 
 async function loadIncome() {
   const month = document.getElementById('inc-filter-month')?.value;
-  let query = db.from('income_records').select('*, recorded_by_user:users!income_records_recorded_by_fkey(name)').order('service_date',{ascending:false});
+  let query = finDb.from('income_records').select('*, recorded_by_user:users!income_records_recorded_by_fkey(name)').order('service_date',{ascending:false});
   if (month) {
     query = query.gte('service_date', month+'-01').lte('service_date', month+'-31');
   }
@@ -5231,7 +5229,7 @@ async function loadIncome() {
 
 // FIX 2: Edit & Delete Income Records
 async function editIncomeRecord(id) {
-  const { data: r } = await db.from('income_records').select('*').eq('id',id).single();
+  const { data: r } = await finDb.from('income_records').select('*').eq('id',id).single();
   if (!r) return;
   openModal('edit-income', `
     <button class="modal-close" onclick="closeModal('edit-income')">✕</button>
@@ -5299,7 +5297,7 @@ async function saveEditIncome(id, oldTithe, oldSavings, oldOp, oldWomens, oldWel
     welfare_amt>0 && incrementPot('welfare',welfare_amt)
   ].filter(Boolean));
 
-  await db.from('income_records').update({ service_date:date, service_type:type, total_amount:total, tithe_amount:tithe, savings_amount:savings, operational_amount:operational, womens_ministry_amount:womens_amt, welfare_amount:welfare_amt, notes }).eq('id',id);
+  await finDb.from('income_records').update({ service_date:date, service_type:type, total_amount:total, tithe_amount:tithe, savings_amount:savings, operational_amount:operational, womens_ministry_amount:womens_amt, welfare_amount:welfare_amt, notes }).eq('id',id);
   await logAudit('INCOME_EDITED','income_records',id,{total,type,date});
   closeModal('edit-income'); await loadGlobalData(); loadIncome();
 }
@@ -5312,7 +5310,7 @@ async function deleteIncomeRecord(id, tithe, savings, op, womens, welfare) {
     decrementPot('operational', parseFloat(op)), decrementPot('womens_ministry', parseFloat(womens)),
     decrementPot('welfare', parseFloat(welfare))
   ]);
-  await db.from('income_records').delete().eq('id', id);
+  await finDb.from('income_records').delete().eq('id', id);
   await logAudit('INCOME_DELETED','income_records',id,{tithe,savings,op});
   await loadGlobalData(); loadIncome();
 }
@@ -5355,8 +5353,8 @@ function switchTab(pageId, tabId) {
 async function loadPledges() { await loadCampaigns(); }
 
 async function loadCampaigns() {
-  const { data } = await db.from('campaigns').select('*').order('created_at',{ascending:false});
-  const { data: pledges } = await db.from('pledges').select('campaign_id, pledged_amount, fulfilled_amount');
+  const { data } = await finDb.from('campaigns').select('*').order('created_at',{ascending:false});
+  const { data: pledges } = await finDb.from('pledges').select('campaign_id, pledged_amount, fulfilled_amount');
   const el = document.getElementById('campaigns-list');
   if (!el) return;
   if (!data || !data.length) { el.innerHTML = '<div class="empty-state"><div class="icon">🎯</div><p>No campaigns yet. Create one above.</p></div>'; return; }
@@ -5394,7 +5392,7 @@ async function loadCampaigns() {
 }
 
 async function loadAllPledges() {
-  const { data } = await db.from('pledges').select('*, campaign:campaigns(name)').order('created_at',{ascending:false});
+  const { data } = await finDb.from('pledges').select('*, campaign:campaigns(name)').order('created_at',{ascending:false});
   const el = document.getElementById('all-pledges-list');
   if (!el) return;
   if (!data || !data.length) { el.innerHTML = '<div class="empty-state"><p>No pledges recorded yet</p></div>'; return; }
@@ -5456,7 +5454,7 @@ async function savePledge(campaignId) {
   const amount = parseFloat(document.getElementById('p-amount').value||0);
   const notes = document.getElementById('p-notes').value;
   if (!name || amount <= 0) { document.getElementById('p-msg').innerHTML = '<div class="alert alert-error">Name and amount required</div>'; return; }
-  const { error } = await db.from('pledges').insert({ campaign_id: campaignId, pledger_name: name, phone, pledged_amount: amount, notes });
+  const { error } = await finDb.from('pledges').insert({ campaign_id: campaignId, pledger_name: name, phone, pledged_amount: amount, notes });
   if (error) { document.getElementById('p-msg').innerHTML = `<div class="alert alert-error">${error.message}</div>`; return; }
   closeModal('add-pledge');
   loadCampaigns();
@@ -5488,7 +5486,7 @@ async function saveCampaign() {
   const start = document.getElementById('c-start').value;
   const end = document.getElementById('c-end').value;
   if (!name || target <= 0 || !start) { document.getElementById('c-msg').innerHTML = '<div class="alert alert-error">Name, target and start date required</div>'; return; }
-  const { error } = await db.from('campaigns').insert({ name, description: desc, target_amount: target, start_date: start, end_date: end||null, created_by: currentUser.id });
+  const { error } = await finDb.from('campaigns').insert({ name, description: desc, target_amount: target, start_date: start, end_date: end||null, created_by: currentUser.id });
   if (error) { document.getElementById('c-msg').innerHTML = `<div class="alert alert-error">${error.message}</div>`; return; }
   closeModal('new-campaign');
   loadCampaigns();
@@ -5526,16 +5524,16 @@ async function saveEditCampaign(id) {
   const end = document.getElementById('ec-end').value;
   const status = document.getElementById('ec-status').value;
   if (!name || target <= 0) { document.getElementById('ec-msg').innerHTML = '<div class="alert alert-error">Name and target required</div>'; return; }
-  const { error } = await db.from('campaigns').update({ name, description:desc, target_amount:target, start_date:start, end_date:end||null, status }).eq('id', id);
+  const { error } = await finDb.from('campaigns').update({ name, description:desc, target_amount:target, start_date:start, end_date:end||null, status }).eq('id', id);
   if (error) { document.getElementById('ec-msg').innerHTML = `<div class="alert alert-error">${error.message}</div>`; return; }
   closeModal('edit-campaign'); loadCampaigns();
 }
 
 async function deleteCampaign(id) {
   if (!confirm('Delete this campaign? All associated pledges will also be deleted.')) return;
-  await db.from('pledge_payments').delete().in('pledge_id', (await db.from('pledges').select('id').eq('campaign_id',id)).data?.map(p=>p.id)||[]);
-  await db.from('pledges').delete().eq('campaign_id', id);
-  await db.from('campaigns').delete().eq('id', id);
+  await finDb.from('pledge_payments').delete().in('pledge_id', (await finDb.from('pledges').select('id').eq('campaign_id',id)).data?.map(p=>p.id)||[]);
+  await finDb.from('pledges').delete().eq('campaign_id', id);
+  await finDb.from('campaigns').delete().eq('id', id);
   loadCampaigns();
 }
 
@@ -5561,15 +5559,15 @@ async function saveEditPledge(id) {
   const phone = document.getElementById('ep-phone').value.trim();
   const amount = parseFloat(document.getElementById('ep-amount').value||0);
   if (!name || amount <= 0) { document.getElementById('ep-msg').innerHTML = '<div class="alert alert-error">Name and amount required</div>'; return; }
-  const { error } = await db.from('pledges').update({ pledger_name:name, phone, pledged_amount:amount }).eq('id', id);
+  const { error } = await finDb.from('pledges').update({ pledger_name:name, phone, pledged_amount:amount }).eq('id', id);
   if (error) { document.getElementById('ep-msg').innerHTML = `<div class="alert alert-error">${error.message}</div>`; return; }
   closeModal('edit-pledge'); loadAllPledges(); loadCampaigns();
 }
 
 async function deletePledge(id) {
   if (!confirm('Delete this pledge record? All payments for this pledge will also be deleted.')) return;
-  await db.from('pledge_payments').delete().eq('pledge_id', id);
-  await db.from('pledges').delete().eq('id', id);
+  await finDb.from('pledge_payments').delete().eq('pledge_id', id);
+  await finDb.from('pledges').delete().eq('id', id);
   loadAllPledges(); loadCampaigns();
 }
 
@@ -5601,15 +5599,15 @@ async function savePledgePayment(pledgeId, pledgedAmt, fulfilledAmt) {
   if (amount <= 0 || !date) { document.getElementById('pp-msg').innerHTML = '<div class="alert alert-error">Amount and date required</div>'; return; }
   const newFulfilled = fulfilledAmt + amount;
   const status = newFulfilled >= pledgedAmt ? 'fulfilled' : 'partial';
-  await db.from('pledge_payments').insert({ pledge_id: pledgeId, amount, payment_date: date, notes, recorded_by: currentUser.id });
-  await db.from('pledges').update({ fulfilled_amount: newFulfilled, status }).eq('id', pledgeId);
+  await finDb.from('pledge_payments').insert({ pledge_id: pledgeId, amount, payment_date: date, notes, recorded_by: currentUser.id });
+  await finDb.from('pledges').update({ fulfilled_amount: newFulfilled, status }).eq('id', pledgeId);
   await incrementPot('operational', amount);
   closeModal('pledge-payment');
   loadCampaigns(); loadAllPledges();
 }
 
 async function viewCampaignPledges(campaignId, campaignName) {
-  const { data } = await db.from('pledges').select('*').eq('campaign_id', campaignId);
+  const { data } = await finDb.from('pledges').select('*').eq('campaign_id', campaignId);
   openModal('view-pledges', `
     <button class="modal-close" onclick="closeModal('view-pledges')">✕</button>
     <h3>Pledges — ${campaignName}</h3>
@@ -5668,7 +5666,7 @@ async function loadWelfare() {
         <div style="font-size:48px;color:#f5c2c7;">♥</div>
       </div>
     </div>`;
-  const { data } = await db.from('welfare_disbursements').select('*, approved_by_user:users!welfare_disbursements_approved_by_fkey(name)').order('disbursement_date',{ascending:false});
+  const { data } = await finDb.from('welfare_disbursements').select('*, approved_by_user:users!welfare_disbursements_approved_by_fkey(name)').order('disbursement_date',{ascending:false});
   const el = document.getElementById('welfare-table');
   if (!data || !data.length) { el.innerHTML = '<div class="empty-state"><p>No disbursements yet</p></div>'; return; }
   const canEdit = ['finance_admin','lead_pastor'].includes(currentUser.role);
@@ -5697,7 +5695,7 @@ async function saveWelfareDisbursement() {
   if (!name || amount <= 0 || !date || !purpose) { msg.innerHTML = '<div class="alert alert-error">Please fill all required fields</div>'; return; }
   const balance = parseFloat(appData.pots['welfare']?.balance||0);
   if (amount > balance) { msg.innerHTML = `<div class="alert alert-error">Insufficient welfare funds. Available: ${fmt(balance)}</div>`; return; }
-  const { error } = await db.from('welfare_disbursements').insert({ recipient_name: name, recipient_phone: phone, amount, purpose, disbursement_date: date, notes, approved_by: currentUser.id });
+  const { error } = await finDb.from('welfare_disbursements').insert({ recipient_name: name, recipient_phone: phone, amount, purpose, disbursement_date: date, notes, approved_by: currentUser.id });
   if (error) { msg.innerHTML = `<div class="alert alert-error">${error.message}</div>`; return; }
   await decrementPot('welfare', amount);
   await logAudit('WELFARE_DISBURSED', 'welfare_disbursements', null, { recipient: name, amount, date });
@@ -5739,14 +5737,14 @@ async function saveEditWelfare(id, oldAmount) {
   } else if (diff < 0) {
     await incrementPot('welfare', Math.abs(diff));
   }
-  await db.from('welfare_disbursements').update({ recipient_name:name, amount:newAmount, disbursement_date:date, purpose }).eq('id', id);
+  await finDb.from('welfare_disbursements').update({ recipient_name:name, amount:newAmount, disbursement_date:date, purpose }).eq('id', id);
   await logAudit('WELFARE_EDITED','welfare_disbursements',id,{name,newAmount});
   closeModal('edit-welfare'); await loadGlobalData(); loadWelfare();
 }
 
 async function deleteWelfareDisbursement(id, amount) {
   if (!confirm('Delete this disbursement? The amount will be returned to the welfare fund.')) return;
-  await db.from('welfare_disbursements').delete().eq('id', id);
+  await finDb.from('welfare_disbursements').delete().eq('id', id);
   await loadGlobalData();
   await incrementPot('welfare', parseFloat(amount));
   await logAudit('WELFARE_DELETED','welfare_disbursements',id,{amount});
@@ -5851,7 +5849,7 @@ function switchSavingsTab(tab) {
 
 async function loadSavings() {
   const pots = appData.pots;
-  const { data: withdrawals } = await db.from('savings_withdrawals').select('*').order('withdrawal_date',{ascending:false});
+  const { data: withdrawals } = await finDb.from('savings_withdrawals').select('*').order('withdrawal_date',{ascending:false});
   const totalWithdrawn = (withdrawals||[]).reduce((s,w)=>s+parseFloat(w.amount||0),0);
   document.getElementById('savings-balance-card').innerHTML = `
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px;">
@@ -5901,7 +5899,7 @@ async function saveFundTransfer() {
   const balance = parseFloat(appData.pots[from]?.balance||0);
   if (amount > balance) { msg.innerHTML = `<div class="alert alert-error">Insufficient funds in ${from.replace(/_/g,' ')}. Available: ${fmt(balance)}</div>`; return; }
 
-  const { error } = await db.from('fund_transfers').insert({
+  const { error } = await finDb.from('fund_transfers').insert({
     from_fund: from, to_fund: to, amount, transfer_date: date,
     reason, transferred_by: currentUser.id
   });
@@ -5921,7 +5919,7 @@ async function saveFundTransfer() {
 }
 
 async function loadTransferHistory() {
-  const { data } = await db.from('fund_transfers').select('*, by_user:users!fund_transfers_transferred_by_fkey(name)').order('transfer_date',{ascending:false});
+  const { data } = await finDb.from('fund_transfers').select('*, by_user:users!fund_transfers_transferred_by_fkey(name)').order('transfer_date',{ascending:false});
   const el = document.getElementById('transfers-table');
   if (!el) return;
   if (!data || !data.length) { el.innerHTML = '<div class="empty-state"><p>No transfers recorded yet</p></div>'; return; }
@@ -5946,7 +5944,7 @@ async function saveSavingsWithdrawal() {
   if (amount <= 0 || !date || !reason) { msg.innerHTML = '<div class="alert alert-error">All fields required</div>'; return; }
   const balance = parseFloat(appData.pots['savings']?.balance||0);
   if (amount > balance) { msg.innerHTML = `<div class="alert alert-error">Insufficient savings. Available: ${fmt(balance)}</div>`; return; }
-  const { error } = await db.from('savings_withdrawals').insert({ amount, reason, withdrawal_date: date, approved_by: currentUser.id, notes: '' });
+  const { error } = await finDb.from('savings_withdrawals').insert({ amount, reason, withdrawal_date: date, approved_by: currentUser.id, notes: '' });
   if (error) { msg.innerHTML = `<div class="alert alert-error">${error.message}</div>`; return; }
   await decrementPot('savings', amount);
   await logAudit('SAVINGS_WITHDRAWAL', 'savings_withdrawals', null, { amount, reason, date });
@@ -5957,7 +5955,7 @@ async function saveSavingsWithdrawal() {
 
 async function deleteSavingsWithdrawal(id, amount) {
   if (!confirm('Delete this withdrawal record? The amount will be returned to savings.')) return;
-  await db.from('savings_withdrawals').delete().eq('id', id);
+  await finDb.from('savings_withdrawals').delete().eq('id', id);
   await loadGlobalData();
   await incrementPot('savings', parseFloat(amount));
   await logAudit('SAVINGS_WITHDRAWAL_DELETED','savings_withdrawals',id,{amount});
@@ -5997,7 +5995,7 @@ async function loadRequests() {
     actEl.innerHTML = `<button class="btn btn-primary" onclick="openNewRequest()">+ New Fund Request</button>`;
   }
 
-  let query = db.from('fund_requests').select('*, requested_by_user:users!fund_requests_requested_by_fkey(name,department), reviewed_by_user:users!fund_requests_reviewed_by_fkey(name)').order('created_at',{ascending:false});
+  let query = finDb.from('fund_requests').select('*, requested_by_user:users!fund_requests_requested_by_fkey(name,department), reviewed_by_user:users!fund_requests_reviewed_by_fkey(name)').order('created_at',{ascending:false});
   if (currentReqTab === 'pending') query = query.eq('status','pending');
   else if (currentReqTab === 'approved') query = query.in('status',['approved','disbursed']);
   else if (currentReqTab === 'reconciled') query = query.eq('status','reconciled');
@@ -6109,7 +6107,7 @@ async function saveRequest() {
   const payNumber = document.getElementById('rq-pay-number').value.trim();
   if (!dept || amount <= 0 || !purpose) { document.getElementById('rq-msg').innerHTML = '<div class="alert alert-error">Department, amount and purpose required</div>'; return; }
   const reqNum = 'REQ-' + new Date().getFullYear() + '-' + uid();
-  const { error } = await db.from('fund_requests').insert({
+  const { error } = await finDb.from('fund_requests').insert({
     request_number: reqNum, department: dept, requested_by: currentUser.id,
     fund_source: fund, amount_requested: amount, purpose, description: desc,
     payment_method: payMethod, payment_account_name: payName, payment_account_number: payNumber
@@ -6118,7 +6116,7 @@ async function saveRequest() {
   await logAudit('FUND_REQUEST_SUBMITTED', 'fund_requests', null, { dept, amount, purpose });
 
   // Notify all admins — lead pastor, finance admin
-  const { data: admins } = await db.from('users').select('id,name,email').in('role',['finance_admin','lead_pastor']).eq('is_active',true);
+  const { data: admins } = await finDb.from('users').select('id,name,email').in('role',['finance_admin','lead_pastor']).eq('is_active',true);
   const msg = `New fund request from ${currentUser.name} (${dept}):\n\nPurpose: ${purpose}\nAmount: ${fmt(amount)}\nFund: ${fund.replace(/_/g,' ')}\n\nPlease log in to review and approve.`;
   for (const admin of admins||[]) {
     await notifyUser(admin.id, 'New Fund Request Submitted', msg, 'fund_request', admin.email, admin.name);
@@ -6142,7 +6140,7 @@ function reviewRequest(reqId, action) {
 
 async function deleteFundRequest(id) {
   if (!confirm('Delete this fund request? This cannot be undone.')) return;
-  await db.from('fund_requests').delete().eq('id', id);
+  await finDb.from('fund_requests').delete().eq('id', id);
   await logAudit('FUND_REQUEST_DELETED','fund_requests',id,{});
   loadRequests();
 }
@@ -6158,7 +6156,7 @@ function editAndResubmit(reqId) {
 }
 
 async function loadEditResubmitForm(reqId) {
-  const { data: r } = await db.from('fund_requests').select('*').eq('id',reqId).single();
+  const { data: r } = await finDb.from('fund_requests').select('*').eq('id',reqId).single();
   if (!r) return;
   document.getElementById('edit-resubmit-form').innerHTML = `
     <div class="alert alert-error" style="margin-bottom:12px;"><strong>Rejection reason:</strong> ${r.review_notes||'No reason given'}</div>
@@ -6194,14 +6192,14 @@ async function submitResubmit(reqId) {
   const payName = document.getElementById('er-pay-name').value.trim();
   const payNumber = document.getElementById('er-pay-number').value.trim();
   if (amount <= 0 || !purpose) { document.getElementById('er-msg').innerHTML = '<div class="alert alert-error">Amount and purpose required</div>'; return; }
-  await db.from('fund_requests').update({
+  await finDb.from('fund_requests').update({
     status: 'pending', amount_requested: amount, purpose, description: desc,
     payment_method: payMethod, payment_account_name: payName, payment_account_number: payNumber,
     reviewed_by: null, review_notes: null, reviewed_at: null
   }).eq('id', reqId);
   await logAudit('FUND_REQUEST_RESUBMITTED','fund_requests',reqId,{amount,purpose});
   // Notify admins
-  const { data: admins } = await db.from('users').select('id,name,email').in('role',['finance_admin','lead_pastor']).eq('is_active',true);
+  const { data: admins } = await finDb.from('users').select('id,name,email').in('role',['finance_admin','lead_pastor']).eq('is_active',true);
   for (const admin of admins||[]) {
     await notifyUser(admin.id,'Fund Request Resubmitted',`${currentUser.name} has edited and resubmitted a fund request for ${fmt(amount)} — "${purpose}"`, 'fund_request', admin.email, admin.name);
   }
@@ -6212,8 +6210,8 @@ async function submitResubmit(reqId) {
 async function submitReview(reqId, action) {
   const notes = document.getElementById('rev-notes').value;
   const status = action === 'approve' ? 'approved' : 'rejected';
-  const { data: req } = await db.from('fund_requests').select('*, requested_by_user:users!fund_requests_requested_by_fkey(id,name,email)').eq('id',reqId).single();
-  const { error } = await db.from('fund_requests').update({ status, reviewed_by: currentUser.id, review_notes: notes, reviewed_at: new Date().toISOString() }).eq('id', reqId);
+  const { data: req } = await finDb.from('fund_requests').select('*, requested_by_user:users!fund_requests_requested_by_fkey(id,name,email)').eq('id',reqId).single();
+  const { error } = await finDb.from('fund_requests').update({ status, reviewed_by: currentUser.id, review_notes: notes, reviewed_at: new Date().toISOString() }).eq('id', reqId);
   if (error) { document.getElementById('rev-msg').innerHTML = `<div class="alert alert-error">${error.message}</div>`; return; }
   await logAudit('FUND_REQUEST_'+status.toUpperCase(), 'fund_requests', reqId, { notes });
   // Notify requester
@@ -6239,8 +6237,8 @@ async function disburseRequest(reqId, amount, fundSource) {
     `); return;
   }
   if (!confirm(`Disburse ${fmt(amount)} from ${fundSource.replace(/_/g,' ')} fund?`)) return;
-  const { data: req } = await db.from('fund_requests').select('*, requested_by_user:users!fund_requests_requested_by_fkey(id,name,email)').eq('id',reqId).single();
-  await db.from('fund_requests').update({ status: 'disbursed', disbursed_at: new Date().toISOString(), disbursed_by: currentUser.id }).eq('id', reqId);
+  const { data: req } = await finDb.from('fund_requests').select('*, requested_by_user:users!fund_requests_requested_by_fkey(id,name,email)').eq('id',reqId).single();
+  await finDb.from('fund_requests').update({ status: 'disbursed', disbursed_at: new Date().toISOString(), disbursed_by: currentUser.id }).eq('id', reqId);
   await decrementPot(fundSource, amount);
   await logAudit('FUND_DISBURSED', 'fund_requests', reqId, { amount, fundSource });
   if (req?.requested_by_user) {
@@ -6294,8 +6292,8 @@ async function submitReconciliation(reqId, disbursedAmount) {
   const notes = document.getElementById('rec-notes').value;
   if (spent <= 0) { document.getElementById('rec-msg').innerHTML = '<div class="alert alert-error">Please enter amount spent</div>'; return; }
 
-  const { data: req } = await db.from('fund_requests').select('fund_source').eq('id',reqId).single();
-  await db.from('fund_requests').update({
+  const { data: req } = await finDb.from('fund_requests').select('fund_source').eq('id',reqId).single();
+  await finDb.from('fund_requests').update({
     status: 'reconciled', amount_spent: spent, amount_returned: returned,
     receipt_description: receipt, reconciliation_notes: notes,
     reconciled_at: new Date().toISOString(), reconciled_by: currentUser.id
@@ -6312,7 +6310,7 @@ async function submitReconciliation(reqId, disbursedAmount) {
 }
 
 async function viewRequest(reqId) {
-  const { data: r } = await db.from('fund_requests').select('*, requested_by_user:users!fund_requests_requested_by_fkey(name), reviewed_by_user:users!fund_requests_reviewed_by_fkey(name), disbursed_by_user:users!fund_requests_disbursed_by_fkey(name), reconciled_by_user:users!fund_requests_reconciled_by_fkey(name)').eq('id',reqId).single();
+  const { data: r } = await finDb.from('fund_requests').select('*, requested_by_user:users!fund_requests_requested_by_fkey(name), reviewed_by_user:users!fund_requests_reviewed_by_fkey(name), disbursed_by_user:users!fund_requests_disbursed_by_fkey(name), reconciled_by_user:users!fund_requests_reconciled_by_fkey(name)').eq('id',reqId).single();
   if (!r) return;
   openModal('view-req', `
     <button class="modal-close" onclick="closeModal('view-req')">✕</button>
@@ -6370,7 +6368,7 @@ function switchBudgetTab(tab) {
 }
 
 async function loadBudgets() {
-  let query = db.from('dept_budgets').select('*, submitted_by_user:users!dept_budgets_submitted_by_fkey(name,department)').order('year',{ascending:false}).order('quarter',{ascending:false});
+  let query = finDb.from('dept_budgets').select('*, submitted_by_user:users!dept_budgets_submitted_by_fkey(name,department)').order('year',{ascending:false}).order('quarter',{ascending:false});
   if (currentBudgetTab !== 'all') query = query.eq('status', currentBudgetTab);
   // Dept heads only see their own department
   if (ALL_DEPT_ROLES.includes(currentUser.role)) {
@@ -6403,7 +6401,7 @@ async function loadBudgets() {
 }
 
 async function viewBudget(id) {
-  const { data: b } = await db.from('dept_budgets').select('*, submitted_by_user:users!dept_budgets_submitted_by_fkey(name), reviewed_by_user:users!dept_budgets_reviewed_by_fkey(name)').eq('id',id).single();
+  const { data: b } = await finDb.from('dept_budgets').select('*, submitted_by_user:users!dept_budgets_submitted_by_fkey(name), reviewed_by_user:users!dept_budgets_reviewed_by_fkey(name)').eq('id',id).single();
   if (!b) return;
   openModal('view-budget', `
     <button class="modal-close" onclick="closeModal('view-budget')">✕</button>
@@ -6437,8 +6435,8 @@ function reviewBudget(id, action) {
 
 async function submitBudgetReview(id, action) {
   const notes = document.getElementById('rb-notes').value;
-  const { data: b } = await db.from('dept_budgets').select('*, submitted_by_user:users!dept_budgets_submitted_by_fkey(id,name,email,department)').eq('id',id).single();
-  await db.from('dept_budgets').update({ status: action, reviewed_by: currentUser.id, review_notes: notes, reviewed_at: new Date().toISOString() }).eq('id', id);
+  const { data: b } = await finDb.from('dept_budgets').select('*, submitted_by_user:users!dept_budgets_submitted_by_fkey(id,name,email,department)').eq('id',id).single();
+  await finDb.from('dept_budgets').update({ status: action, reviewed_by: currentUser.id, review_notes: notes, reviewed_at: new Date().toISOString() }).eq('id', id);
   if (b?.submitted_by_user) {
     const u = b.submitted_by_user;
     const msg = action === 'approved'
@@ -6460,7 +6458,7 @@ function editResubmitBudget(id) {
 }
 
 async function loadEditBudgetForm(id) {
-  const { data: b } = await db.from('dept_budgets').select('*').eq('id',id).single();
+  const { data: b } = await finDb.from('dept_budgets').select('*').eq('id',id).single();
   if (!b) return;
   document.getElementById('edit-budget-form').innerHTML = `
     <div class="alert alert-error" style="margin-bottom:12px;"><strong>Rejection reason:</strong> ${b.review_notes||'No reason given'}</div>
@@ -6489,12 +6487,12 @@ async function saveEditBudget(id) {
   const amount = parseFloat(document.getElementById('eb-amount').value||0);
   const notes = document.getElementById('eb-notes').value;
   if (!year || amount <= 0) { document.getElementById('eb-msg').innerHTML = '<div class="alert alert-error">Year and amount required</div>'; return; }
-  await db.from('dept_budgets').update({
+  await finDb.from('dept_budgets').update({
     year: parseInt(year), quarter, total_amount: amount, notes,
     status: 'pending', reviewed_by: null, review_notes: null, reviewed_at: null
   }).eq('id', id);
   // Notify admins
-  const { data: admins } = await db.from('users').select('id,name,email').in('role',['finance_admin','lead_pastor']).eq('is_active',true);
+  const { data: admins } = await finDb.from('users').select('id,name,email').in('role',['finance_admin','lead_pastor']).eq('is_active',true);
   for (const admin of admins||[]) {
     await notifyUser(admin.id,'Budget Resubmitted',`${currentUser.name} has edited and resubmitted a ${quarter} ${year} budget estimate for ${currentUser.department}.`,'budget', admin.email, admin.name);
   }
@@ -6530,7 +6528,7 @@ function pageReports() {
 }
 
 async function loadReports() {
-  const { data: campaigns } = await db.from('campaigns').select('id,name');
+  const { data: campaigns } = await finDb.from('campaigns').select('id,name');
   const sel = document.getElementById('rep-campaign');
   if (sel && campaigns) campaigns.forEach(c => { const o = document.createElement('option'); o.value=c.id; o.textContent=c.name; sel.appendChild(o); });
 }
@@ -6542,9 +6540,9 @@ async function generateMonthlyReport() {
   const firstDay = month + '-01';
   const lastDay = new Date(year, mon, 0).toISOString().split('T')[0]; // last day of month
   const [{ data: income }, { data: requests }, { data: welfare }] = await Promise.all([
-    db.from('income_records').select('*').gte('service_date',firstDay).lte('service_date',lastDay),
-    db.from('fund_requests').select('*').gte('created_at',firstDay+'T00:00:00').lte('created_at',lastDay+'T23:59:59'),
-    db.from('welfare_disbursements').select('*').gte('disbursement_date',firstDay).lte('disbursement_date',lastDay)
+    finDb.from('income_records').select('*').gte('service_date',firstDay).lte('service_date',lastDay),
+    finDb.from('fund_requests').select('*').gte('created_at',firstDay+'T00:00:00').lte('created_at',lastDay+'T23:59:59'),
+    finDb.from('welfare_disbursements').select('*').gte('disbursement_date',firstDay).lte('disbursement_date',lastDay)
   ]);
 
   const totalIncome = (income||[]).reduce((s,r)=>s+parseFloat(r.total_amount||0),0);
@@ -6592,7 +6590,7 @@ async function exportMonthlyCSV() {
   const [year, mon] = month.split('-').map(Number);
   const firstDay = month + '-01';
   const lastDay = new Date(year, mon, 0).toISOString().split('T')[0];
-  const { data: income } = await db.from('income_records').select('*').gte('service_date', firstDay).lte('service_date', lastDay);
+  const { data: income } = await finDb.from('income_records').select('*').gte('service_date', firstDay).lte('service_date', lastDay);
   if (!income || !income.length) { alert('No data for this month'); return; }
   const headers = ['Date','Service Type','Total','Tithe','Savings','Operational','Welfare','Womens Ministry','Notes'];
   const rows = income.map(r => [r.service_date, r.service_type, r.total_amount, r.tithe_amount, r.savings_amount, r.operational_amount, r.welfare_amount, r.womens_ministry_amount, r.notes||''].join(','));
@@ -6602,7 +6600,7 @@ async function exportMonthlyCSV() {
 
 async function exportPledgeCSV() {
   const campaignId = document.getElementById('rep-campaign').value;
-  let query = db.from('pledges').select('*, campaign:campaigns(name)');
+  let query = finDb.from('pledges').select('*, campaign:campaigns(name)');
   if (campaignId) query = query.eq('campaign_id', campaignId);
   const { data } = await query;
   if (!data || !data.length) { alert('No pledge data found'); return; }
@@ -6630,7 +6628,7 @@ function pageAudit() {
 }
 
 async function loadAudit() {
-  const { data } = await db.from('audit_log').select('*, user:users!audit_log_performed_by_fkey(name)').order('created_at',{ascending:false}).limit(100);
+  const { data } = await finDb.from('audit_log').select('*, user:users!audit_log_performed_by_fkey(name)').order('created_at',{ascending:false}).limit(100);
   const el = document.getElementById('audit-table');
   if (!data || !data.length) { el.innerHTML = '<div class="empty-state"><p>No audit entries yet</p></div>'; return; }
   el.innerHTML = `<div class="table-wrap"><table>
@@ -6733,7 +6731,7 @@ async function saveEditUser(userId) {
   const name = document.getElementById('eu-name').value.trim();
   const email = document.getElementById('eu-email').value.trim();
   if (!name) { document.getElementById('eu-msg').innerHTML = '<div class="alert alert-error">Name is required</div>'; return; }
-  const { error } = await db.from('users').update({ name, email: email||null }).eq('id', userId);
+  const { error } = await finDb.from('users').update({ name, email: email||null }).eq('id', userId);
   if (error) { document.getElementById('eu-msg').innerHTML = `<div class="alert alert-error">${error.message}</div>`; return; }
   document.getElementById('eu-msg').innerHTML = '<div class="alert alert-success">✓ User updated successfully</div>';
   setTimeout(() => { closeModal('edit-user'); loadGlobalData().then(loadUsers); }, 1000);
@@ -6758,7 +6756,7 @@ async function saveNewPassword(userId) {
   const confirmPw = document.getElementById('cp-confirm').value;
   if (!newPw || newPw.length < 6) { document.getElementById('cp-msg').innerHTML = '<div class="alert alert-error">Password must be at least 6 characters</div>'; return; }
   if (newPw !== confirmPw) { document.getElementById('cp-msg').innerHTML = '<div class="alert alert-error">Passwords do not match</div>'; return; }
-  const { error } = await db.from('users').update({ password: newPw }).eq('id', userId);
+  const { error } = await finDb.from('users').update({ password: newPw }).eq('id', userId);
   if (error) { document.getElementById('cp-msg').innerHTML = `<div class="alert alert-error">${error.message}</div>`; return; }
   document.getElementById('cp-msg').innerHTML = '<div class="alert alert-success">✓ Password updated successfully</div>';
   setTimeout(() => closeModal('change-pw'), 1500);
@@ -6771,7 +6769,7 @@ async function saveNewUser() {
   const role = document.getElementById('nu-role').value;
   const dept = document.getElementById('nu-dept').value.trim();
   if (!name || !username || !password) { document.getElementById('nu-msg').innerHTML = '<div class="alert alert-error">Name, username and password required</div>'; return; }
-  const { error } = await db.from('users').insert({ name, username, password, role, department: dept||null });
+  const { error } = await finDb.from('users').insert({ name, username, password, role, department: dept||null });
   if (error) { document.getElementById('nu-msg').innerHTML = `<div class="alert alert-error">${error.message}</div>`; return; }
   closeModal('new-user');
   await loadGlobalData();
@@ -6779,7 +6777,7 @@ async function saveNewUser() {
 }
 
 async function toggleUserStatus(userId, isActive) {
-  await db.from('users').update({ is_active: !isActive }).eq('id', userId);
+  await finDb.from('users').update({ is_active: !isActive }).eq('id', userId);
   await loadGlobalData();
   loadUsers();
 }
@@ -6871,7 +6869,7 @@ async function saveSettings() {
     { key:'church_bank', value: bank }
   ];
   for (const u of updates) {
-    await db.from('settings').upsert({ key: u.key, value: u.value, updated_at: new Date().toISOString() });
+    await finDb.from('settings').upsert({ key: u.key, value: u.value, updated_at: new Date().toISOString() });
   }
   await loadGlobalData();
   msg.innerHTML = '<div class="alert alert-success">✓ Settings saved</div>';
@@ -6885,18 +6883,18 @@ async function clearAllTestData() {
   if (msg) msg.innerHTML = '<div class="alert alert-info">Clearing data...</div>';
   try {
     await Promise.all([
-      db.from('pledge_payments').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-      db.from('pledges').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-      db.from('campaigns').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-      db.from('welfare_disbursements').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-      db.from('savings_withdrawals').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-      db.from('fund_requests').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-      db.from('income_records').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-      db.from('audit_log').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+      finDb.from('pledge_payments').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+      finDb.from('pledges').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+      finDb.from('campaigns').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+      finDb.from('welfare_disbursements').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+      finDb.from('savings_withdrawals').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+      finDb.from('fund_requests').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+      finDb.from('income_records').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+      finDb.from('audit_log').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
     ]);
     // Reset all pot balances to zero
     const pots = ['tithe','savings','operational','womens_ministry','welfare'];
-    await Promise.all(pots.map(p => db.from('fund_pots').update({ balance: 0, updated_at: new Date().toISOString() }).eq('name', p)));
+    await Promise.all(pots.map(p => finDb.from('fund_pots').update({ balance: 0, updated_at: new Date().toISOString() }).eq('name', p)));
     await loadGlobalData();
     if (msg) msg.innerHTML = '<div class="alert alert-success">✓ All test data cleared and balances reset to zero.</div>';
   } catch(e) {
@@ -6933,7 +6931,7 @@ document.addEventListener('click', (e) => {
   if (e.target.classList.contains('modal-overlay')) {
     e.target.classList.remove('open');
   }
-}
+});
 })();
 </script>
 
