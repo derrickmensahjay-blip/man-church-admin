@@ -4358,16 +4358,13 @@ window.addEventListener('load', function(){
 
 <script>
 // ---- FINANCE JS ----
-(function(){
-  var createClient = supabase.createClient;
-  
+const finDb = supabase.createClient('https://fixtjkfghcexffdxiisz.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZpeHRqa2ZnaGNleGZmZHhpaXN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NDM0MDksImV4cCI6MjA5NjAxOTQwOX0.-WrENj-GixEqeBKMg7q8_sgAsriJgJS46wHy9EaNSV0');
+
 // =============================================
 // SUPABASE CONFIG — Replace with your credentials
 // =============================================
 
 
-
-const db = createClient(FIN_URL, FIN_KEY);
 
 // Email notifications disabled — using in-app notifications only
 const NETLIFY_EMAIL_URL = '';
@@ -6932,7 +6929,7 @@ document.addEventListener('click', (e) => {
     e.target.classList.remove('open');
   }
 });
-})();
+
 </script>
 
 <script>
