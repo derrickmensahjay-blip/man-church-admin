@@ -980,7 +980,7 @@ async function loadReports(){
 // SMS
 function updateCharCount(){var msg=document.getElementById('sms-message').value;document.getElementById('sms-chars').textContent=msg.length;var prev=document.getElementById('sms-preview');if(msg.trim()){prev.style.display='block';document.getElementById('sms-preview-text').textContent=msg;}else prev.style.display='none';}
 async function updateSMSCount(){var group=document.getElementById('sms-group').value;var q=db.from('members').select('id',{count:'exact',head:true});if(group!=='all')q=q.eq('type',group);var r=await q;document.getElementById('sms-recipient-count').textContent='Will be sent to '+(r.count||0)+' '+(group==='all'?'people':group+'s');}
-async function checkBalance(){try{var res=await fetch('/api/sms',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'balance'})});var data=await res.json();document.getElementById('sms-balance').textContent=data.balance||data.data||'-';}catch(e){document.getElementById('sms-balance').textContent='Error';}}
+async function checkBalance(){try{var res=await fetch('https://fixtjkfghcexffdxiisz.supabase.co/functions/v1/sms',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPABASE_ANON_KEY},body:JSON.stringify({action:'balance'})});var data=await res.json();document.getElementById('sms-balance').textContent=data.balance||data.data||'-';}catch(e){document.getElementById('sms-balance').textContent='Error';}}
 async function sendSMS(){
   var message=document.getElementById('sms-message').value.trim();
   var group=document.getElementById('sms-group').value;
@@ -994,7 +994,7 @@ async function sendSMS(){
   if(!r.data||!r.data.length){resultEl.innerHTML='<div class="alert alert-error">No recipients found.</div>';btnEl.innerHTML='Send SMS';btnEl.disabled=false;return;}
   var sent=0,failed=0;
   for(var i=0;i<r.data.length;i++){
-    try{var res=await fetch('/api/sms',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'send',phone:r.data[i].phone,message:message})});var d=await res.json();if(d.status==='success'||d.code==='ok'||res.ok)sent++;else failed++;}catch(e){failed++;}
+    try{var res=await fetch('https://fixtjkfghcexffdxiisz.supabase.co/functions/v1/sms',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPABASE_ANON_KEY},body:JSON.stringify({action:'send',phone:r.data[i].phone,message:message})});var d=await res.json();if(d.status==='success'||d.code==='ok'||res.ok)sent++;else failed++;}catch(e){failed++;}
   }
   smsHistory.unshift({date:new Date().toLocaleString('en-GH'),group:group,message:message,sent:sent,failed:failed,total:r.data.length});
   renderSMSHistory();
@@ -1135,7 +1135,7 @@ async function sendEventSMS(){
   resultEl.innerHTML='<span class="spinner"></span> Sending...';
   var sent=0,failed=0;
   for(var i=0;i<r.data.length;i++){
-    try{var res=await fetch('/api/sms',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'send',phone:r.data[i].phone,message:message})});var d=await res.json();if(d.status==='success'||d.code==='ok'||res.ok)sent++;else failed++;}catch(e){failed++;}
+    try{var res=await fetch('https://fixtjkfghcexffdxiisz.supabase.co/functions/v1/sms',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPABASE_ANON_KEY},body:JSON.stringify({action:'send',phone:r.data[i].phone,message:message})});var d=await res.json();if(d.status==='success'||d.code==='ok'||res.ok)sent++;else failed++;}catch(e){failed++;}
   }
   resultEl.innerHTML='Sent: '+sent+' - Failed: '+failed;
   document.getElementById('event-sms-msg').value='';
